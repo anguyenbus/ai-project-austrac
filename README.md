@@ -64,22 +64,26 @@ This repository contains two integrated components:
 ## Key Features
 
 ### Multi-Agent Intelligence
+
 - **11 Specialized Agents**: Query validation, schema understanding, SQL generation, error correction, and visualization
 - **Intelligent Collaboration**: Agents work in coordinated stages with feedback loops
 - **Cost Optimization**: Tiered model selection (Nova Micro → Haiku → Sonnet → Nova Pro)
 
 ### Universal Database Support
+
 - **Platform Agnostic**: Connect to any Ibis-supported backend with a single connection string
 - **6+ Database Platforms**: Athena, PostgreSQL, Snowflake, BigQuery, Redshift, Databricks
 - **Cloud Provider Enrichment**: Optional AWS Glue metadata integration
 
 ### RAG-Powered Schema Understanding
+
 - **Automatic Discovery**: Extract and vectorize database schemas
 - **Semantic Search**: pgvector-based similarity matching for relevant tables and columns
 - **Training Examples**: LLM-generated SQL examples with validation
 - **High-Cardinality Handling**: Categorical column embeddings for semantic search
 
 ### Production-Ready Features
+
 - **Semantic Caching**: 70%+ hit rate with Redis-based intelligent deduplication
 - **Multi-Turn Conversations**: S3-backed session management with contextual understanding
 - **Error Recovery**: Automatic SQL correction and retry logic with validation
@@ -98,12 +102,14 @@ This repository contains two integrated components:
 ### Installation
 
 1. **Clone the repository**:
+
 ```bash
 git clone <repository-url>
 cd ai-project-austrac
 ```
 
 2. **Install dependencies** for both projects:
+
 ```bash
 # instantinsight-db
 cd instantinsight-db
@@ -115,6 +121,7 @@ uv sync --all-extras --dev
 ```
 
 3. **Start infrastructure services**:
+
 ```bash
 # From instantinsight-db directory
 chmod +x start_up_container.sh
@@ -122,6 +129,7 @@ chmod +x start_up_container.sh
 ```
 
 This starts:
+
 - PostgreSQL with pgvector extension (port 5432)
 - Redis Stack for semantic caching (port 6379)
 - Langfuse for observability (port 3000)
@@ -129,6 +137,7 @@ This starts:
 4. **Configure environment variables**:
 
 **instantinsight-db/.env**:
+
 ```bash
 # Analytics Database (supports any Ibis backend)
 ANALYTICS_DB_URL=athena://awsdatacatalog?region=ap-southeast-2&database=warehouse&work_group=primary&s3_staging_dir=s3://bucket/results/
@@ -153,6 +162,7 @@ REDIS_PORT=6379
 ```
 
 **instantinsight/.env**:
+
 ```bash
 # Copy similar settings from instantinsight-db/.env
 # Add additional settings for session management:
@@ -160,6 +170,7 @@ S3_SESSION_BUCKET=your-session-bucket
 ```
 
 5. **Initialize the RAG knowledge base**:
+
 ```bash
 # From instantinsight-db directory
 chmod +x scripts/setup_schema_logic.sh
@@ -167,6 +178,7 @@ chmod +x scripts/setup_schema_logic.sh
 ```
 
 This will:
+
 - Extract your database schema
 - Create vector embeddings
 - Generate training SQL examples
@@ -175,6 +187,7 @@ This will:
 ### Basic Usage
 
 **Python API**:
+
 ```python
 from src.query_processor import NL2SQLProcessor
 
@@ -190,6 +203,7 @@ processor.display_results(result)
 ```
 
 **Flask Web Interface**:
+
 ```bash
 # From instantinsight directory
 cd flask_app
@@ -199,6 +213,7 @@ uv run python run_flask.py
 Visit http://localhost:5000 for the interactive web interface.
 
 **Lambda Deployment**:
+
 ```bash
 # From instantinsight/lambda directory
 make build
@@ -229,11 +244,13 @@ See [`instantinsight/lambda/README.md`](instantinsight/lambda/README.md) for dep
 ## Performance & Cost
 
 ### Latency
+
 - **Cache Hit**: 10-50ms (no LLM calls)
 - **Simple Query**: 1-3 seconds (3-5 agents)
 - **Complex Query**: 3-8 seconds (8-12 agents)
 
 ### Cost Optimization
+
 - **Semantic Cache**: 70% hit rate = 70% cost reduction
 - **Tiered Models**: Use cheapest model for each task
   - Nova Micro: Formatting ($0.035/1M tokens)
@@ -243,15 +260,16 @@ See [`instantinsight/lambda/README.md`](instantinsight/lambda/README.md) for dep
 
 ### Typical Query Costs
 
-| Query Type | Without Cache | With Cache (70% hit) |
-|------------|---------------|----------------------|
-| Simple     | $0.05         | $0.015               |
-| Complex    | $0.15         | $0.045               |
-| Multi-join | $0.30         | $0.090               |
+| Query Type | Without Cache          | With Cache (70% hit) |
+| ---------- | ---------------------- | -------------------- |
+| Simple     | $0.05         | $0.015 |                      |
+| Complex    | $0.15         | $0.045 |                      |
+| Multi-join | $0.30         | $0.090 |                      |
 
 ## Technology Stack
 
 ### Core Technologies
+
 - **Python 3.12+** with uv package manager
 - **PostgreSQL + pgvector** - Vector storage and RAG engine
 - **Redis Stack** - Semantic caching
@@ -259,18 +277,21 @@ See [`instantinsight/lambda/README.md`](instantinsight/lambda/README.md) for dep
 - **AWS Bedrock** - LLM integration (Claude Sonnet, Haiku, Nova)
 
 ### AI/ML Frameworks
+
 - **LangChain** - LLM orchestration
 - **Strands** - Agent framework
 - **Instructor** - Structured outputs
 - **AWS Titan v2** - Text embeddings
 
 ### Infrastructure
+
 - **Docker Compose** - Local development environment
 - **Alembic** - Database migrations
 - **AWS Lambda** - Serverless deployment
 - **S3** - Session storage
 
 ### Monitoring & Observability
+
 - **Langfuse** - LLM tracing and cost tracking
 - **Loguru** - Structured logging
 
@@ -279,6 +300,7 @@ See [`instantinsight/lambda/README.md`](instantinsight/lambda/README.md) for dep
 ### Code Quality Standards
 
 Both projects enforce strict quality through:
+
 - **Ruff**: Fast Python linter and formatter (rules: E, F, I, B, UP, D)
 - **Type Hints**: Comprehensive type annotations with `beartype` runtime validation
 - **Contracts**: `icontract` for preconditions and postconditions
@@ -322,6 +344,7 @@ pre-commit run --all-files
 ## Documentation
 
 ### instantinsight (Application Layer)
+
 - [Architecture Overview](instantinsight/docs/architecture.md)
 - [Agent Workflow](instantinsight/docs/agent-workflow.md)
 - [Cache System](instantinsight/docs/cache-system.md)
@@ -329,6 +352,7 @@ pre-commit run --all-files
 - [Lambda Deployment](instantinsight/lambda/README.md)
 
 ### instantinsight-db (Database Layer)
+
 - [Universal Database Connectivity](instantinsight-db/docs/architecture/UNIVERSAL_DATABASE_CONNECTIVITY.md)
 - [RAG System Architecture](instantinsight-db/README.md#architecture)
 - [Setup Orchestration](instantinsight-db/README.md#setup-orchestration)
@@ -365,25 +389,3 @@ ai-project-austrac/
     ├── tests/                    # Test suite
     └── pyproject.toml            # Dependencies
 ```
-
-## Contributing
-
-Contributions welcome! Please:
-1. Follow code style guidelines (Ruff, type hints, docstrings)
-2. Add tests for new features (target ≥80% coverage)
-3. Update documentation
-4. Keep functions under 20 lines
-5. Run pre-commit hooks before pushing
-
-See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines.
-
-## License
-
-[Your License Here]
-
-## Support
-
-For issues, questions, or contributions:
-- Open an issue in the repository
-- Review existing documentation
-- Check the examples in `instantinsight/examples/` and `instantinsight-db/examples/`
