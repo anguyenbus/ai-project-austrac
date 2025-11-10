@@ -1,0 +1,126 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+venv/
+ENV/
+env/
+.python-version
+
+# Poetry
+# Don't ignore poetry.lock - it should be committed for reproducible builds
+# poetry.lock should be committed to ensure reproducible builds
+# Only add this if you have a good reason to ignore it:
+# poetry.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# RAG & AI/ML specific
+data/vectorstore/
+data/embeddings/
+data/models/
+*.faiss
+*.index
+*.pkl
+*.pickle
+
+# Database files
+*.db
+*.sqlite3
+*.sqlite
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.backup.*
+aws/.env.rds
+
+# Migration backup files
+backup_*.sql
+temp_*.sql
+*.backup.*
+
+# Docker volumes (if any)
+postgres_data/
+pgadmin_data/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# PyTorch models
+*.pth
+*.pt
+
+# HuggingFace cache
+.cache/
+
+# Temporary files
+*.tmp
+*.temp
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large model files (should use Git LFS)
+*.bin
+
+# Test results
+tests/integration/pipeline_evaluation_results/
+
+.cursor/
+memory-bank/
+samples/*
+rag_stats/*
+temp_results/*
+schema_analysis_results/*
+
+# UV - modern Python package manager
+uv.lock
+.python-version
+
+# Poetry (legacy - remove after UV migration complete)
+# poetry.lock is now replaced by uv.lock
+poetry.lock
+reference/*

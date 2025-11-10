@@ -1,0 +1,194 @@
+/* Main Layout */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+}
+
+.header-bar {
+    text-align: center;
+    padding: 20px;
+    background-color: #708090;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.header-bar h1 {
+    margin: 0;
+}
+
+.main-content {
+    padding: 10px;
+    min-height: 700px;
+}
+
+.pane {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    height: 100%;
+    min-height: 600px;
+}
+
+/* Chat Display */
+.chat-display {
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    background: #fafafa;
+}
+
+.welcome-message {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+.chat-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.user-message {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.assistant-message {
+    background: #f3e5f5;
+    border-left: 4px solid #9c27b0;
+}
+
+.sql-code {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+}
+
+/* Chat Controls */
+.chat-controls {
+    margin-top: 10px;
+}
+
+.button-group {
+    margin-top: 10px;
+}
+
+.button-group button {
+    margin-right: 10px;
+}
+
+/* Visualization Container */
+#current-viz-container {
+    margin: 10px 0;
+    min-height: 0;
+}
+
+/* Tab Bar */
+.tab-bar {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab-bar button {
+    padding: 5px 15px;
+}
+
+.sub-tab-bar {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+.no-charts {
+    padding: 10px;
+    color: #666;
+    text-align: center;
+    width: 100%;
+}
+
+/* Content Area */
+.content-area {
+    min-height: 400px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 3px;
+    background: #fafafa;
+}
+
+.placeholder-message {
+    text-align: center;
+    padding: 50px;
+    color: #666;
+}
+
+/* Side Chat Interface */
+.chat-interface {
+    margin-top: 10px;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.chat-response {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    margin: 10px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.conversation-entry {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.user-entry {
+    background: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+.assistant-entry {
+    background: #e8f5e8;
+    border-left: 3px solid #28a745;
+}
+
+/* Config Display */
+.config-display {
+    background: #f8f9fa;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px;
+}
+
+.config-display pre {
+    background: #e9ecef;
+    padding: 15px;
+    border-radius: 3px;
+    overflow: auto;
+    max-height: 500px;
+    font-family: 'Courier New', monospace;
+}
+
+/* Data Table */
+.data-info {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    margin: 10px;
+}
+
+.table-container {
+    max-height: 400px;
+    overflow: auto;
+}

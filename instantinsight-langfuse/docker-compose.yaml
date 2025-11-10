@@ -1,0 +1,43 @@
+services:
+  langfuse-server:
+    image: langfuse/langfuse:2
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PORT=${DATABASE_PORT:-5433}
+      - DATABASE_USERNAME=${DATABASE_USERNAME:-postgres}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-postgres}
+      - DATABASE_NAME=${DATABASE_NAME:-postgres}
+      - DATABASE_HOST=${DATABASE_HOST:-db}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-secret}
+      - SALT=${SALT:-salt}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-false}
+      - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
+
+  db:
+    image: postgres:17
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -p 5433"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5433:5433"
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    command: postgres -p 5433
+
+volumes:
+  database_data:
+    driver: local

@@ -1,0 +1,19 @@
+name: "SQL Validation"
+description: "Template for validating SQL queries for Athena compliance"
+version: "1.0"
+
+parameters:
+  - sql: "SQL query to validate"
+  - full_table_name: "Expected fully qualified table name"
+
+prompt: |
+  You are an AWS Athena SQL expert. Analyze this SQL query for STRICT Athena compliance.
+
+  **SQL Query to Validate:**
+  ```sql
+  {sql}
+  ```
+
+  **Required Table Name:** {full_table_name}
+
+  Reply with exactly "VALID" or "INVALID" followed by brief reason.

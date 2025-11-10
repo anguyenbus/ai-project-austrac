@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-11-07T23:37:31.571090",
+  "status": "initialized",
+  "databases_processed": [
+    "text_to_sql"
+  ],
+  "errors": [],
+  "warnings": [
+    "ATHENA_S3_STAGING_DIR not configured - will use workgroup's default output location. If connection fails, set ATHENA_S3_STAGING_DIR or configure workgroup output location in AWS."
+  ],
+  "statistics": {
+    "total_documents": 0,
+    "total_sql_examples": 113,
+    "total_ddl_items": 21,
+    "total_items": 134,
+    "failed_additions": 0,
+    "document_types": {
+      "question_sql": 113,
+      "ddl": 21,
+      "documentation": 0
+    }
+  },
+  "configuration": {
+    "athena_database": "text_to_sql",
+    "athena_region": "ap-southeast-2",
+    "rag_embedding_model": "amazon.titan-embed-text-v2:0"
+  }
+}

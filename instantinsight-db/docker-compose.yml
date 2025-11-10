@@ -1,0 +1,119 @@
+services:
+  # PostgreSQL Database with pgvector extension and optimized chunked RAG
+  # db:
+  #   container_name: db
+  #   image: timescale/timescaledb-ha:pg16
+  #   environment:
+  #     POSTGRES_DB: your_db_name
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+  #     # pgvector configuration
+  #     TIMESCALEDB_TELEMETRY: "off"
+  #   volumes:
+  #     - postgresql_data:/var/lib/postgresql/data
+  #     # pgvector setup script (includes vector extension with chunking support)
+  #     - ./schemas/pgvector-setup.sql:/docker-entrypoint-initdb.d/02-pgvector-setup.sql
+  #     - ./files:/files
+  #   ports:
+  #     - 5432:5432
+  #   networks:
+  #     - db
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres -d your_db_name"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+
+  db:
+    container_name: db
+    image: timescale/timescaledb-ha:pg16
+    environment:
+      POSTGRES_DB: instantinsight
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      # pgvector configuration
+      TIMESCALEDB_TELEMETRY: "off"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      # pgvector setup script (includes vector extension with chunking support)
+      - ./schemas/pgvector-setup.sql:/docker-entrypoint-initdb.d/02-pgvector-setup.sql
+      - ./files:/files
+    ports:
+      - 5432:5432
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d instantinsight"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Stack with vector search capabilities
+  redis-stack:
+    container_name: redis-stack
+    image: redis/redis-stack:7.2.0-v10
+    environment:
+      REDIS_ARGS: "--maxmemory 4gb --maxmemory-policy allkeys-lru --appendonly yes"
+    volumes:
+      - redis_data:/data
+    ports:
+      - 6379:6379
+    networks:
+      - db
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # RedisInsight - Web UI for Redis
+  redisinsight:
+    container_name: redisinsight
+    image: redis/redisinsight:latest
+    ports:
+      - 5540:5540
+    networks:
+      - db
+    depends_on:
+      redis-stack:
+        condition: service_healthy
+
+  # pgAdmin (unchanged)
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: postgres
+      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_root_prefs:/root/.pgadmin
+      - pgadmin_working_dir:/var/lib/pgadmin
+      - ./files:/files
+    ports:
+      - 5050:5050
+    networks:
+      - db
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+# Volumes (unchanged)
+volumes:
+  pgadmin_root_prefs:
+    driver: local
+  pgadmin_working_dir:
+    driver: local
+  postgresql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks (unchanged)
+networks:
+  db:
+    driver: bridge

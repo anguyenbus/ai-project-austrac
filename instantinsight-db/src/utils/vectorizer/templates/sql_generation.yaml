@@ -1,0 +1,61 @@
+name: "SQL Example Generation"
+description: "Template for generating diverse SQL examples for Athena tables"
+version: "1.0"
+
+parameters:
+  - schema_info: "Formatted table schema with columns and descriptions"
+  - table_name: "Short table name"
+  - database_name: "Database name" 
+  - full_table_name: "Fully qualified table name (awsdatacatalog.db.table)"
+
+prompt: |
+  You are an **AWS Athena SQL expert**. Your task is to generate **exactly 10 diverse and practical SQL queries** based on the provided table schema.
+
+  {schema_info}
+
+  ### 🚨 ABSOLUTE REQUIREMENTS – FOLLOW STEP BY STEP
+
+  1. **Generate SQL FIRST**  
+     - Each query must strictly follow Athena SQL syntax.  
+     - Every SQL must reference the table in full qualification format:  
+       `awsdatacatalog.{database_name}.{table_name}`  
+     - Column references:  
+       - Use `column_name` only (NEVER `table.column_name`).  
+       - Use `"double_quotes"` for columns that contain spaces/special characters.  
+     - String literals: Use `'single quotes'`.  
+     - Select only **1–4 columns maximum** per query (no `SELECT *`).  
+     - Queries must be realistic, diverse, and cover different SQL operations (filtering, aggregation, ordering, limits, conditions, distinct, etc.).
+
+  2. **Generate a natural-language question AFTER the SQL**  
+     - The question must directly describe what the SQL is retrieving, specific to that query.  
+     - The question should be written in plain English, matching the SQL exactly.  
+     - Ensure the SQL and the question are 1-to-1 paired and consistent.
+
+  3. **Return only the final result in a JSON array with 10 entries**, in the following format:  
+  [
+    {{
+      "question": "What are the basic details for this table?",
+      "sql": "SELECT column1, column2 FROM {full_table_name} LIMIT 10;"
+    }}
+  ]
+
+  CRITICAL ATHENA SYNTAX RULES - ABSOLUTELY MANDATORY:
+
+  **TABLE REFERENCE RULES:**
+  ✅ Table name: ALWAYS use {full_table_name} (NEVER just {table_name})
+  ✅ Full qualification: awsdatacatalog.{database_name}.{table_name} format REQUIRED
+
+  **COLUMN REFERENCE RULES:**
+  ✅ Column reference: Use column_name only (NEVER table.column_name)
+  ✅ Column quoting: Use "double_quotes" for columns with spaces/special chars (shown above)
+  ✅ String literals: Use single quotes 'text' for string values
+
+  **VISUALIZATION COLUMN LIMIT RULE - ABSOLUTELY MANDATORY:**
+  🎯 **MAXIMUM 4 COLUMNS: SELECT queries MUST contain UP TO 4 columns for optimal visualization**
+  ✅ SELECT col1, col2 FROM {full_table_name};  ← CORRECT (2 columns)
+  ✅ SELECT col1, col2, col3 FROM {full_table_name};  ← CORRECT (3 columns)
+  ✅ SELECT col1, col2, col3, col4 FROM {full_table_name};  ← CORRECT (4 columns)
+  ❌ SELECT col1, col2, col3, col4, col5 FROM {full_table_name};  ← WRONG (5 columns)
+  ❌ SELECT * FROM {full_table_name};  ← WRONG (likely more than 4 columns)
+
+  

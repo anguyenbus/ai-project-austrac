@@ -1,0 +1,340 @@
+# VALIDATED Athena SQL Examples - Generated 20250809_010104
+# Contains 22 ATHENA-VALIDATED examples
+# All queries have been executed against Athena and return ≥1 row
+
+examples:
+  queries:
+  - question: Which assets have the highest current cost values and what are their commission dates?
+    sql: SELECT "asset number internal", "current asset cost", "commission date" FROM awsdatacatalog.customanalysers.asset_book_account
+      WHERE "current asset cost" IS NOT NULL ORDER BY "current asset cost" DESC LIMIT 10;
+  - question: What is the total acquisition value by asset register category?
+    sql: SELECT "asset register", SUM("acquisitions to date ci amount") as total_acquisitions FROM awsdatacatalog.customanalysers.asset_book_account
+      WHERE "acquisitions to date ci amount" IS NOT NULL GROUP BY "asset register" ORDER BY total_acquisitions DESC;
+  - question: What are the average unit costs and total units for each asset category?
+    sql: SELECT "asset register", AVG("unit cost amount") as avg_unit_cost, SUM("units acquired number") as total_units FROM
+      awsdatacatalog.customanalysers.asset_book_account WHERE "unit cost amount" IS NOT NULL GROUP BY "asset register";
+  - question: What are the total committed purchase orders and delivery amounts by status?
+    sql: SELECT status, SUM("committed purchase orders ci amount") as total_po_commitments, SUM("committed deliveries ci amount")
+      as total_delivery_commitments FROM awsdatacatalog.customanalysers.asset_book_account WHERE status IS NOT NULL GROUP
+      BY status;
+  - question: What is the depreciation analysis showing start dates and current depreciable values?
+    sql: SELECT "asset number internal", "depreciation start date", "depreciable value" FROM awsdatacatalog.customanalysers.asset_book_account
+      WHERE "depreciation start date" IS NOT NULL AND "depreciable value" > 0 ORDER BY "depreciation start date" DESC;
+  - question: What are the current asset utilization rates showing total and current units?
+    sql: SELECT "asset register", SUM("total units used") as total_used, SUM("current units") as current_available FROM awsdatacatalog.customanalysers.asset_book_account
+      WHERE "total units used" IS NOT NULL AND "current units" IS NOT NULL GROUP BY "asset register";
+  - question: What are the most common transaction types and their frequency in our financial records?
+    sql: SELECT "transaction type", COUNT(*) as frequency FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      GROUP BY "transaction type" ORDER BY frequency DESC;
+  - question: Which assets have the highest transaction amounts and what are their current book values?
+    sql: SELECT asset, "transaction amount", book FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "transaction amount" IS NOT NULL ORDER BY "transaction amount" DESC LIMIT 10;
+  - question: How do different depreciation methods compare in terms of average rates and total asset costs?
+    sql: SELECT "depreciation method", AVG("depreciation rate") as avg_rate, AVG("depreciation period opening asset cost")
+      as avg_cost, COUNT(*) as asset_count FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "depreciation method" IS NOT NULL GROUP BY "depreciation method";
+  - question: What are the recent high-value disposals with their gain or loss amounts?
+    sql: SELECT "disposed asset amount", "gain loss amount" FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "disposed asset amount" > 0 AND "gain loss amount" IS NOT NULL ORDER BY "disposed asset amount" DESC LIMIT 15;
+  - question: Which processing groups handle the most transaction volume and what are their average amounts?
+    sql: SELECT "processing group", COUNT(*) as transaction_count, AVG("transaction amount") as avg_amount FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "processing group" IS NOT NULL GROUP BY "processing group" ORDER BY transaction_count DESC;
+  - question: What are the different asset types and their financial status distribution?
+    sql: SELECT "register asset type", "register asset financial status", COUNT(*) as count FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "register asset type" IS NOT NULL AND "register asset financial status" IS NOT NULL GROUP BY "register asset type",
+      "register asset financial status";
+  - question: What are the assets with significant revaluation reserve changes?
+    sql: SELECT asset, "old revaluation reserve net amount", "new revaluation reserve net amount" FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "old revaluation reserve net amount" != "new revaluation reserve net amount" AND "old revaluation reserve net
+      amount" IS NOT NULL AND "new revaluation reserve net amount" IS NOT NULL;
+  - question: Which suppliers have assets with the highest replacement values?
+    sql: SELECT supplier, MAX("register asset replacement value amount") as max_replacement_value FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE supplier IS NOT NULL AND "register asset replacement value amount" IS NOT NULL GROUP BY supplier ORDER BY max_replacement_value
+      DESC LIMIT 10;
+  - question: What are the most recent high-value transactions with their current processing status?
+    sql: SELECT "transaction amount", "ledger account transaction status", "ledger account transaction date", reference FROM
+      awsdatacatalog.customanalysers.general_ledger_details WHERE "transaction amount" > 10000 ORDER BY "ledger account transaction
+      date" DESC LIMIT 15;
+  - question: How do different payment types compare in terms of average transaction values?
+    sql: SELECT "ledger account pay type", AVG("transaction amount") as avg_transaction_value FROM awsdatacatalog.customanalysers.general_ledger_details
+      WHERE "ledger account pay type" IS NOT NULL AND "transaction amount" IS NOT NULL GROUP BY "ledger account pay type"
+      ORDER BY avg_transaction_value DESC;
+  - question: Which accounts have the most open items requiring attention?
+    sql: SELECT "internal account", "number of open items" FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "number of open items" > 0 ORDER BY "number of open items" DESC LIMIT 20;
+  - question: What are the total outstanding amounts by transaction source and document type?
+    sql: SELECT "ledger account transaction source", "document type description", SUM("ledger account transaction outstanding
+      amount") as total_outstanding FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "ledger account transaction
+      outstanding amount" > 0 GROUP BY "ledger account transaction source", "document type description" ORDER BY total_outstanding
+      DESC;
+  - question: Which expense commitments have the highest values and their associated account descriptions?
+    sql: SELECT "expense commitment amount", "ledger account short description", "ledger account description", "internal account"
+      FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "expense commitment amount" > 0 ORDER BY "expense commitment
+      amount" DESC LIMIT 10;
+  - question: How do retention amounts vary across different transaction types?
+    sql: SELECT "transaction type", AVG("retention (base) amount") as avg_retention, COUNT(*) as transaction_count FROM awsdatacatalog.customanalysers.general_ledger_details
+      WHERE "retention (base) amount" IS NOT NULL GROUP BY "transaction type" ORDER BY avg_retention DESC;
+  - question: What are the largest discrepancies between original amounts and applied amounts?
+    sql: SELECT "original amount", "ledger account transaction applied amount", ("original amount" - "ledger account transaction
+      applied amount") as variance, reference FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "original amount"
+      IS NOT NULL AND "ledger account transaction applied amount" IS NOT NULL ORDER BY ABS("original amount" - "ledger account
+      transaction applied amount") DESC LIMIT 15;
+  - question: Which periods show the highest transaction activity by volume?
+    sql: SELECT period, COUNT(*) as transaction_volume FROM awsdatacatalog.customanalysers.general_ledger_details WHERE period
+      IS NOT NULL GROUP BY period ORDER BY transaction_volume DESC;
+  - question: Which asset types have the most transactions and what are their average amounts?
+    sql: SELECT "register asset type", COUNT(*) as transaction_count, AVG("transaction amount") as avg_amount FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "register asset type" IS NOT NULL GROUP BY "register asset type" ORDER BY transaction_count DESC;
+  - question: What are the recent high-value asset disposals with their gain/loss amounts and disposal types?
+    sql: SELECT "disposal or write off date", "disposed asset amount", "gain loss amount", "transaction disposal type" FROM
+      awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction WHERE "disposal or write off date" IS NOT
+      NULL AND "disposed asset amount" > 0 ORDER BY "disposal or write off date" DESC LIMIT 15;
+  - question: Which processing groups handle the largest transaction volumes?
+    sql: SELECT "processing group", COUNT(*) as total_transactions FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "processing group" IS NOT NULL GROUP BY "processing group" ORDER BY total_transactions DESC;
+  - question: What are the depreciation patterns across different asset categories and methods?
+    sql: SELECT "register asset type", "depreciation method", AVG("depreciation rate") as avg_rate FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "depreciation method" IS NOT NULL AND "depreciation rate" > 0 GROUP BY "register asset type", "depreciation method"
+      ORDER BY avg_rate DESC;
+  - question: Which assets have the highest replacement values and insurance coverage?
+    sql: SELECT asset, "register asset replacement value amount", "register asset insured amount", "insurer name" FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "register asset replacement value amount" > 0 ORDER BY "register asset replacement value amount" DESC LIMIT 20;
+  - question: What are the monthly transaction patterns by financial posting status?
+    sql: SELECT EXTRACT(YEAR FROM "financial transaction effective date") as year, EXTRACT(MONTH FROM "financial transaction
+      effective date") as month, "financial posting status" FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+      WHERE "financial transaction effective date" IS NOT NULL AND "financial posting status" IS NOT NULL ORDER BY year DESC,
+      month DESC;
+  - question: What are the most recent high-value transactions with their processing status?
+    sql: SELECT "transaction amount", "ledger account transaction date", "ledger account transaction status", "transaction
+      type" FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "transaction amount" > 10000 ORDER BY "ledger
+      account transaction date" DESC LIMIT 15;
+  - question: How do different payment types compare in terms of total transaction volume?
+    sql: SELECT "ledger account pay type", COUNT(*) as transaction_count, AVG("transaction amount") as avg_amount FROM awsdatacatalog.customanalysers.general_ledger_details
+      WHERE "ledger account pay type" IS NOT NULL GROUP BY "ledger account pay type" ORDER BY transaction_count DESC;
+  - question: Which internal accounts have the most open items requiring attention?
+    sql: SELECT "internal account", "number of open items" FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "number of open items" > 0 ORDER BY "number of open items" DESC LIMIT 20;
+  - question: What are the largest outstanding amounts by account and their associated transaction sources?
+    sql: SELECT "internal account", "ledger account transaction outstanding amount", "ledger account transaction source",
+      "document type description" FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "ledger account transaction
+      outstanding amount" > 5000 ORDER BY "ledger account transaction outstanding amount" DESC LIMIT 12;
+  - question: How do expense commitments vary across different ledger control categories?
+    sql: SELECT "ledger control description", SUM("expense commitment amount") as total_commitment, COUNT(*) as record_count
+      FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "expense commitment amount" IS NOT NULL GROUP BY "ledger
+      control description" ORDER BY total_commitment DESC;
+  - question: What are the key transaction details for entries with the highest applied amounts?
+    sql: SELECT "ledger account transaction applied amount", "ledger account transaction narration level 1", "transaction
+      number", reference FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "ledger account transaction applied
+      amount" IS NOT NULL ORDER BY "ledger account transaction applied amount" DESC LIMIT 10;
+  - question: How do balance amounts compare across different chart classifications and periods?
+    sql: SELECT "chart name", period, AVG("balance amount") as avg_balance FROM awsdatacatalog.customanalysers.general_ledger_details
+      WHERE "balance amount" IS NOT NULL AND period IS NOT NULL GROUP BY "chart name", period ORDER BY avg_balance DESC LIMIT
+      20;
+  - question: Which accounts show the largest discrepancies between original and final transaction amounts?
+    sql: SELECT "internal account", "original amount", "transaction amount", ("original amount" - "transaction amount") as
+      amount_difference FROM awsdatacatalog.customanalysers.general_ledger_details WHERE "original amount" IS NOT NULL AND
+      "transaction amount" IS NOT NULL AND ABS("original amount" - "transaction amount") > 500 ORDER BY ABS("original amount"
+      - "transaction amount") DESC LIMIT 15;
+  - question: What are the basic chart account details?
+    sql: SELECT "chart name", "account number internal", "chart description", "chart
+      type" FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      LIMIT 10;
+  - question: Which accounts are currently active?
+    sql: SELECT "account name", "chart name", "is active", "chart status" FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      WHERE "is active" = 'Yes';
+  - question: What are the different chart types and their counts?
+    sql: SELECT "chart type", COUNT(*) as account_count FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      GROUP BY "chart type" ORDER BY account_count DESC;
+  - question: Which accounts have payment terms and what are the discount percentages?
+    sql: SELECT "account name", "terms days", "discount days", "discount percentage"
+      FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      WHERE "terms days" > 0;
+  - question: What are the geographic locations of payees?
+    sql: SELECT "payee city", "payee state", "payee postcode", COUNT(*) as location_count
+      FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      WHERE "payee city" IS NOT NULL GROUP BY "payee city", "payee state", "payee
+      postcode";
+  - question: Which accounts have payments disabled and why?
+    sql: SELECT "account name", "disable payments", reason, "chart status" FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      WHERE "disable payments" = 'Yes';
+  - question: What are the different payment and receipt methods used?
+    sql: SELECT "payment method", "receipt method", COUNT(*) as method_count FROM
+      awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts GROUP
+      BY "payment method", "receipt method" ORDER BY method_count DESC;
+  - question: Which accounts are associated with procurement cards?
+    sql: SELECT "account name", "trading name", "pcard chart ind", "pcard type" FROM
+      awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts WHERE
+      "pcard chart ind" = 'Y';
+  - question: What are the tax treatment types and withholding tax configurations?
+    sql: SELECT "tax treatment", "withholding tax type", COUNT(*) as tax_config_count
+      FROM awsdatacatalog.customanalysers.general_ledger_financial_chart_accounts
+      GROUP BY "tax treatment", "withholding tax type" ORDER BY tax_config_count DESC;
+  # expense_line_system_type
+  - question: What are the top 10 basic expense details with amounts?
+    sql: SELECT "expense system", "expense type", "request amount", "final complete
+      amount" FROM awsdatacatalog.customanalysers.expense_line_system_type LIMIT 10;
+  - question: Which top 10 expense types have the highest average request amounts?
+    sql: SELECT "expense type", COUNT(*) as expense_count, AVG("request amount") as
+      avg_request_amount FROM awsdatacatalog.customanalysers.expense_line_system_type
+      GROUP BY "expense type" ORDER BY avg_request_amount DESC LIMIT 10;
+  - question: What are the pending and unapproved expense amounts by processing group in descending order?
+    sql: SELECT "processing group", SUM("request unapproved amount") as total_unapproved,
+      SUM("final pending amount") as total_pending FROM awsdatacatalog.customanalysers.expense_line_system_type
+      GROUP BY "processing group" ORDER BY total_unapproved DESC;
+  - question: Which 20 expenses are marked as personal expenses?
+    sql: SELECT "document number", "expense type", "personal expense", "request amount"
+      FROM awsdatacatalog.customanalysers.expense_line_system_type WHERE "personal
+      expense" = 'Yes' LIMIT 20;
+  - question: What are the different payment methods and their usage frequency in descending order?
+    sql: SELECT "payment method", COUNT(*) as usage_count, AVG("request amount") as
+      avg_amount FROM awsdatacatalog.customanalysers.expense_line_system_type WHERE
+      "payment method" IS NOT NULL GROUP BY "payment method" ORDER BY usage_count
+      DESC;
+  - question: Which top 15 expenses have been cancelled and why?
+    sql: SELECT "document number", "expense type", "is cancelled", reason FROM awsdatacatalog.customanalysers.expense_line_system_type
+      WHERE "is cancelled" = 'Yes' LIMIT 15;
+  # reconciliation_account_group_ledger_transaction
+  - question: What are the top 10basic account details and their reconciliation status?
+    sql: SELECT "account name", "account group", "reconciliation process", "account
+      status" FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      LIMIT 10;
+  - question: Which top 20 accounts have unmatched ledger transactions?
+    sql: SELECT "account name", "ledger book transaction matched ind", "ledger book
+      transaction match amount" FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      WHERE "ledger book transaction matched ind" = 'N' LIMIT 20;
+  - question: What are the total match amounts by account group in descending order?
+    sql: SELECT "account group", COUNT(*) as transaction_count, SUM("ledger book transaction
+      match amount") as total_amount FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      GROUP BY "account group" ORDER BY total_amount DESC;
+  - question: Which transactions have disputes and their details?
+    sql: SELECT "account name", "trans nbr", "ledger book transaction dispute ind",
+      "ledger book transaction match amount" FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      WHERE "ledger book transaction dispute ind" = 'Y';
+  - question: Which top 15accounts have the highest asset register values?
+    sql: SELECT "account name", "account group", "asset register", "account group
+      status" FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      WHERE "asset register" IS NOT NULL ORDER BY "asset register" DESC LIMIT 15;
+  - question: What are the different ledger book statuses and their transaction volumes?
+    sql: SELECT "ledger book status", "statement status", COUNT(*) as status_count
+      FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      GROUP BY "ledger book status", "statement status" ORDER BY status_count DESC;
+  - question: Which top 10 reconciliation runs have the most transactions?
+    sql: SELECT "recon run nbr", "reconciliation group", COUNT(*) as transaction_count
+      FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+      WHERE "recon run nbr" IS NOT NULL GROUP BY "recon run nbr", "reconciliation
+      group" ORDER BY transaction_count DESC LIMIT 10;
+  # expense_line_system_type
+  - question: What are the basic expense details with amounts?
+    sql: SELECT "expense system", "expense type", "request amount", "final complete
+      amount" FROM awsdatacatalog.customanalysers.expense_line_system_type LIMIT 10;
+  - question: Which expense types have the highest average request amounts?
+    sql: SELECT "expense type", COUNT(*) as expense_count, AVG("request amount") as
+      avg_request_amount FROM awsdatacatalog.customanalysers.expense_line_system_type
+      GROUP BY "expense type" ORDER BY avg_request_amount DESC LIMIT 10;
+  - question: What are the pending and unapproved expense amounts by processing group?
+    sql: SELECT "processing group", SUM("request unapproved amount") as total_unapproved,
+      SUM("final pending amount") as total_pending FROM awsdatacatalog.customanalysers.expense_line_system_type
+      GROUP BY "processing group" ORDER BY total_unapproved DESC;
+  - question: Which expenses are marked as personal expenses?
+    sql: SELECT "expense system", "document number", "personal expense", "request
+      amount" FROM awsdatacatalog.customanalysers.expense_line_system_type WHERE "personal
+      expense" = 'Y' LIMIT 20;
+  - question: What are the cancelled expenses and their reasons?
+    sql: SELECT "expense type", "is cancelled", reason, "request amount" FROM awsdatacatalog.customanalysers.expense_line_system_type
+      WHERE "is cancelled" = 'Y' LIMIT 15;
+  - question: How do request amounts compare to final complete amounts?
+    sql: SELECT "expense type", "request amount", "final complete amount", ("final
+      complete amount" - "request amount") as amount_difference FROM awsdatacatalog.customanalysers.expense_line_system_type
+      WHERE "final complete amount" > 0 ORDER BY amount_difference DESC LIMIT 20;
+  - question: What are the different payment methods and their usage?
+    sql: SELECT "payment method", COUNT(*) as usage_count, SUM("request amount") as
+      total_amount FROM awsdatacatalog.customanalysers.expense_line_system_type WHERE
+      "payment method" IS NOT NULL GROUP BY "payment method" ORDER BY usage_count
+      DESC;
+  # agreement_charges_billing
+  - question: What are the basic agreement details and their current status?
+    sql: SELECT "agreement number", "agreement description", "agreement status", "agreement
+      approval status" FROM awsdatacatalog.customanalysers.agreement_charges_billing
+      LIMIT 10;
+  - question: Which agreements have the highest opening balance amounts?
+    sql: SELECT "agreement number", "agreement description", "opening balance amount"
+      FROM awsdatacatalog.customanalysers.agreement_charges_billing ORDER BY "opening
+      balance amount" DESC LIMIT 10;
+  - question: How many agreements are there by status and approval status?
+    sql: SELECT "agreement status", "agreement approval status", COUNT(*) as agreement_count
+      FROM awsdatacatalog.customanalysers.agreement_charges_billing GROUP BY "agreement
+      status", "agreement approval status";
+  - question: What are the different charge types and their average cumulative balance?
+    sql: SELECT "charge type code", COUNT(*) as charge_count, AVG("cumulative balance
+      amount") as avg_balance FROM awsdatacatalog.customanalysers.agreement_charges_billing
+      GROUP BY "charge type code";
+  - question: Which agreements are currently on hold?
+    sql: SELECT "agreement number", "agreement description", "agreement on hold",
+      "agreement status" FROM awsdatacatalog.customanalysers.agreement_charges_billing
+      WHERE "agreement on hold" = 'Y';
+  - question: What is the total opening balance amount by agreement profile code?
+    sql: SELECT "agreement profile code", COUNT(*) as total_agreements, SUM("opening
+      balance amount") as total_opening_balance FROM awsdatacatalog.customanalysers.agreement_charges_billing
+      GROUP BY "agreement profile code";
+  - question: Which agreements have negative cumulative balance amounts?
+    sql: SELECT "agreement number", "agreement description", "cumulative balance amount"
+      FROM awsdatacatalog.customanalysers.agreement_charges_billing WHERE "cumulative
+      balance amount" < 0 ORDER BY "cumulative balance amount";
+  # agreement_charges_billing_rate
+  - question: What are the basic agreement details and their current status?
+    sql: SELECT "agreement number", "agreement description", "agreement status", "agreement
+      approval status" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      LIMIT 10;
+  - question: Which agreements have the highest billing rates?
+    sql: SELECT "agreement number", "agreement description", "agreement rate amount",
+      "agreement vat inclusive amount" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      ORDER BY "agreement rate amount" DESC LIMIT 15;
+  - question: Which agreements are currently active and approved?
+    sql: SELECT "agreement number", "agreement description", "agreement status", "agreement
+      rate amount" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      WHERE "agreement status" = 'Active' AND "agreement approval status" = 'Approved';
+  - question: What is the VAT analysis for agreements with significant amounts?
+    sql: SELECT "agreement number", "agreement rate amount", "agreement vat amount",
+      "agreement vat inclusive amount" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      WHERE "agreement rate amount" > 1000 ORDER BY "agreement vat amount" DESC;
+  - question: Which agreements have reversal indicators set?
+    sql: SELECT "agreement number", "agreement description", "reversal ind", "agreement
+      rate amount" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      WHERE "reversal ind" = 'Y' OR "reversal ind" = 'Yes';
+  - question: What are the billing period amounts by dependency group?
+    sql: SELECT "dependency group", COUNT(*) as group_count, SUM("charge bill period
+      amount") as total_billing FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      GROUP BY "dependency group" ORDER BY total_billing DESC;
+  - question: Which agreements have end date indicators and their details?
+    sql: SELECT "agreement number", "agreement description", "end date ind", "agreement
+      rate amount" FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      WHERE "end date ind" IS NOT NULL AND "end date ind" != '';
+  - question: What are the agreement profile codes with their average rates?
+    sql: SELECT "agreement profile code", COUNT(*) as profile_count, AVG("agreement
+      rate amount") as avg_rate FROM awsdatacatalog.customanalysers.agreement_charges_billing_rate
+      GROUP BY "agreement profile code" ORDER BY avg_rate DESC LIMIT 20;
+  # document_file_charges_glf
+  - question: What are the basic document details and their total amounts?
+    sql: SELECT "document file", "document description", "document total", "date created"
+      FROM awsdatacatalog.customanalysers.document_file_charges_glf LIMIT 10;
+  - question: Which document types have the highest total document amounts?
+    sql: SELECT "document type", SUM("total document amount") as total_amount, COUNT(*)
+      as document_count FROM awsdatacatalog.customanalysers.document_file_charges_glf
+      GROUP BY "document type" ORDER BY total_amount DESC LIMIT 10;
+  - question: Which processing groups have the largest debit and credit balances?
+    sql: SELECT "processing group", SUM("total debits") as total_debits, SUM("total
+      credits") as total_credits FROM awsdatacatalog.customanalysers.document_file_charges_glf
+      GROUP BY "processing group" ORDER BY total_debits DESC LIMIT 10;
+  - question: What are the overdue documents based on due dates?
+    sql: SELECT "document file", "due date", "document total", "document file status"
+      FROM awsdatacatalog.customanalysers.document_file_charges_glf WHERE "due date"
+      < CURRENT_DATE AND "document file status" != 'PAID' ORDER BY "due date" ASC
+      LIMIT 20;
+  - question: What is the document balance analysis by ledger code?
+    sql: SELECT "balance ledger code", SUM("total balance amount") as balance, COUNT(*)
+      as document_count FROM awsdatacatalog.customanalysers.document_file_charges_glf
+      WHERE "balance ledger code" IS NOT NULL GROUP BY "balance ledger code" ORDER
+      BY ABS(balance) DESC LIMIT 15;
+  - question: Which document sources generate the most revenue by entity type?
+    sql: SELECT "document source", "entity type", SUM("total document amount") as
+      revenue FROM awsdatacatalog.customanalysers.document_file_charges_glf WHERE
+      "entity type" IS NOT NULL GROUP BY "document source", "entity type" ORDER BY
+      revenue DESC LIMIT 10;

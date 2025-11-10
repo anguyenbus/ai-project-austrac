@@ -1,0 +1,306 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'instantinsight Query Processor Lambda Function with Container Image'
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Environment name
+    Default: production
+    AllowedValues:
+      - dev
+      - staging
+      - production
+  
+  ImageTag:
+    Type: String
+    Description: Container image tag to deploy
+    Default: latest
+  
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID for Lambda deployment
+  
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Private subnet IDs for Lambda (comma-separated)
+  
+  PostgresHost:
+    Type: String
+    Description: PostgreSQL host for vector database
+  
+  PostgresPort:
+    Type: String
+    Description: PostgreSQL port
+    Default: '5432'
+  
+  PostgresDatabase:
+    Type: String
+    Description: PostgreSQL database name
+    Default: instantinsight
+  
+  AthenaDatabase:
+    Type: String
+    Description: Athena database name
+    Default: text_to_sql
+  
+  AthenaWorkGroup:
+    Type: String
+    Description: Athena work group
+    Default: primary
+  
+  RedisHost:
+    Type: String
+    Description: Redis host for semantic cache
+  
+  RedisPort:
+    Type: String
+    Description: Redis port
+    Default: '6379'
+  
+  LambdaMemorySize:
+    Type: Number
+    Description: Lambda function memory in MB
+    Default: 2048
+    MinValue: 512
+    MaxValue: 10240
+  
+  LambdaTimeout:
+    Type: Number
+    Description: Lambda function timeout in seconds
+    Default: 300
+    MinValue: 30
+    MaxValue: 900
+
+Resources:
+  # ECR Repository
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: instantinsighttest
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: instantinsight
+        - Key: Component
+          Value: QueryProcessor
+
+  # S3 Bucket for Query Results
+  QueryResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'instantinsight-query-results-${Environment}-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldResults
+            Status: Enabled
+            ExpirationInDays: 30
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: instantinsight
+        - Key: Component
+          Value: QueryProcessor
+
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'instantinsight-query-processor-lambda-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        # S3 Access for Results Export
+        - PolicyName: S3QueryResultsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt QueryResultsBucket.Arn
+                  - !Sub '${QueryResultsBucket.Arn}/*'
+        
+        # Athena Access
+        - PolicyName: AthenaQueryAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetWorkGroup
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetTable
+                  - glue:GetPartitions
+                Resource: '*'
+        
+        # Bedrock Access for AI Models
+        - PolicyName: BedrockModelAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/*'
+        
+        # Secrets Manager Access
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:instantinsight/*'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: instantinsight
+
+  # Lambda Security Group
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub 'instantinsight-lambda-query-processor-${Environment}'
+      GroupDescription: Security group for instantinsight Query Processor Lambda
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub 'instantinsight-lambda-query-processor-${Environment}'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: instantinsight
+
+  # CloudWatch Log Group
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/instantinsight-query-processor-${Environment}'
+      RetentionInDays: 30
+
+  # Lambda Function
+  QueryProcessorFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LambdaLogGroup
+    Properties:
+      FunctionName: !Sub 'instantinsight-query-processor-${Environment}'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      PackageType: Image
+      ImageUri: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/instantinsighttest:${ImageTag}'
+      Timeout: !Ref LambdaTimeout
+      MemorySize: !Ref LambdaMemorySize
+      ReservedConcurrentExecutions: 10
+      Environment:
+        Variables:
+          RESULTS_BUCKET: !Ref QueryResultsBucket
+          RESULTS_PREFIX: 'query-results/'
+          QUERY_TIMEOUT: '120'
+          MAX_RESULT_ROWS: '50000'
+          LOG_LEVEL: INFO
+          POSTGRES_HOST: !Ref PostgresHost
+          POSTGRES_PORT: !Ref PostgresPort
+          POSTGRES_DATABASE: !Ref PostgresDatabase
+          ATHENA_DATABASE: !Ref AthenaDatabase
+          ATHENA_WORK_GROUP: !Ref AthenaWorkGroup
+          REDIS_HOST: !Ref RedisHost
+          REDIS_PORT: !Ref RedisPort
+      VpcConfig:
+        SubnetIds: !Ref SubnetIds
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: instantinsight
+        - Key: Component
+          Value: QueryProcessor
+
+  # Lambda Alias for Production
+  ProductionAlias:
+    Type: AWS::Lambda::Alias
+    Properties:
+      FunctionName: !Ref QueryProcessorFunction
+      FunctionVersion: $LATEST
+      Name: production
+
+Outputs:
+  LambdaFunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt QueryProcessorFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LambdaArn'
+  
+  ECRRepositoryUri:
+    Description: ECR Repository URI
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ECRRepositoryUri'
+  
+  QueryResultsBucketName:
+    Description: S3 Bucket for Query Results
+    Value: !Ref QueryResultsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-QueryResultsBucket'
+  
+  LambdaSecurityGroupId:
+    Description: Lambda Security Group ID
+    Value: !Ref LambdaSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'

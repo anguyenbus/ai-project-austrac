@@ -1,0 +1,328 @@
+# ATHENA-VALIDATED SQL Examples
+# Generated on 2025-09-18 17:28:33
+# Contains 113 ATHENA-VALIDATED examples
+# These examples have been tested against AWS Athena and confirmed to execute successfully
+
+examples:
+  queries:
+  - question: What are all the category names and their descriptions?
+    sql: SELECT category_name, description FROM awsdatacatalog.text_to_sql.categories;
+  - question: Show the first 5 categories with their IDs and names?
+    sql: SELECT category_id, category_name FROM awsdatacatalog.text_to_sql.categories
+      LIMIT 5;
+  - question: What are the unique category names in alphabetical order?
+    sql: SELECT DISTINCT category_name FROM awsdatacatalog.text_to_sql.categories
+      ORDER BY category_name;
+  - question: Which categories have descriptions containing the word 'fresh'?
+    sql: SELECT category_name, description FROM awsdatacatalog.text_to_sql.categories
+      WHERE description LIKE '%fresh%';
+  - question: How many total categories are there?
+    sql: SELECT COUNT(*) as total_categories FROM awsdatacatalog.text_to_sql.categories;
+  - question: What are the category details for category ID 3?
+    sql: SELECT category_id, category_name, description FROM awsdatacatalog.text_to_sql.categories
+      WHERE category_id = 3;
+  - question: Which categories have picture files associated with them?
+    sql: SELECT category_name, picture FROM awsdatacatalog.text_to_sql.categories
+      WHERE picture IS NOT NULL;
+  - question: What are all the unique customer IDs in the customer demographics table?
+    sql: SELECT DISTINCT customerid FROM awsdatacatalog.text_to_sql.customer_customer_demo;
+  - question: What are all the unique customer type IDs available?
+    sql: SELECT DISTINCT customertypeid FROM awsdatacatalog.text_to_sql.customer_customer_demo;
+  - question: Show me the first 10 customer and customer type ID pairs from the demographics
+      table?
+    sql: SELECT customerid, customertypeid FROM awsdatacatalog.text_to_sql.customer_customer_demo
+      LIMIT 10;
+  - question: How many total customer demographic records are there?
+    sql: SELECT COUNT(*) FROM awsdatacatalog.text_to_sql.customer_customer_demo;
+  - question: How many unique customers are represented in the demographics table?
+    sql: SELECT COUNT(DISTINCT customerid) FROM awsdatacatalog.text_to_sql.customer_customer_demo;
+  - question: How many unique customer types are there?
+    sql: SELECT COUNT(DISTINCT customertypeid) FROM awsdatacatalog.text_to_sql.customer_customer_demo;
+  - question: Show me all customer demographic records sorted by customer ID?
+    sql: SELECT customerid, customertypeid FROM awsdatacatalog.text_to_sql.customer_customer_demo
+      ORDER BY customerid;
+  - question: What are the customer IDs and birth countries for the first 10 customers?
+    sql: SELECT cd_demo_sk, cd_birth_country FROM awsdatacatalog.text_to_sql.customer_demographics
+      LIMIT 10;
+  - question: How many customers are there for each gender?
+    sql: SELECT cd_gender, COUNT(*) as customer_count FROM awsdatacatalog.text_to_sql.customer_demographics
+      GROUP BY cd_gender;
+  - question: What are the unique marital statuses available in the customer demographics?
+    sql: SELECT DISTINCT cd_marital_status FROM awsdatacatalog.text_to_sql.customer_demographics
+      ORDER BY cd_marital_status;
+  - question: Show customers with their education status and credit rating who have
+      a college education?
+    sql: SELECT cd_demo_sk, cd_education_status, cd_credit_rating FROM awsdatacatalog.text_to_sql.customer_demographics
+      WHERE cd_education_status = 'College';
+  - question: What are the top 5 most common birth countries among customers?
+    sql: SELECT cd_birth_country, COUNT(*) as country_count FROM awsdatacatalog.text_to_sql.customer_demographics
+      GROUP BY cd_birth_country ORDER BY country_count DESC LIMIT 5;
+  - question: Which customers have the highest purchase estimates and what are their
+      genders?
+    sql: SELECT cd_demo_sk, cd_gender, cd_purchase_estimate FROM awsdatacatalog.text_to_sql.customer_demographics
+      ORDER BY cd_purchase_estimate DESC LIMIT 10;
+  - question: How many customers are married and have children?
+    sql: SELECT COUNT(*) as married_with_children FROM awsdatacatalog.text_to_sql.customer_demographics
+      WHERE cd_marital_status = 'M' AND cd_dep_count > 0;
+  - question: What are the different credit ratings and their employment counts?
+    sql: SELECT cd_credit_rating, cd_dep_employed_count FROM awsdatacatalog.text_to_sql.customer_demographics
+      WHERE cd_credit_rating IS NOT NULL ORDER BY cd_credit_rating;
+  - question: Show customer demographics for those born in the United States with
+      their education status?
+    sql: SELECT cd_demo_sk, cd_birth_country, cd_education_status FROM awsdatacatalog.text_to_sql.customer_demographics
+      WHERE cd_birth_country = 'UNITED STATES' LIMIT 15;
+  - question: What are the first 10 customer records showing their basic information?
+    sql: SELECT col0, col1, col2, col3 FROM awsdatacatalog.text_to_sql.customers LIMIT
+      10;
+  - question: How many total customers are in the database?
+    sql: SELECT COUNT(*) FROM awsdatacatalog.text_to_sql.customers;
+  - question: What are the unique values in the first column of the customers table?
+    sql: SELECT DISTINCT col0 FROM awsdatacatalog.text_to_sql.customers;
+  - question: What customers have 'A' as the first character in their first column?
+    sql: SELECT col0, col1, col2 FROM awsdatacatalog.text_to_sql.customers WHERE col0
+      LIKE 'A%';
+  - question: What are the customer records ordered by the first column alphabetically?
+    sql: SELECT col0, col1, col2, col3 FROM awsdatacatalog.text_to_sql.customers ORDER
+      BY col0 ASC LIMIT 15;
+  - question: What customers have non-null values in both the first and second columns?
+    sql: SELECT col0, col1, col2 FROM awsdatacatalog.text_to_sql.customers WHERE col0
+      IS NOT NULL AND col1 IS NOT NULL;
+  - question: What are the last 5 customer records when sorted by the first column?
+    sql: SELECT col0, col1, col2, col3 FROM awsdatacatalog.text_to_sql.customers ORDER
+      BY col0 DESC LIMIT 5;
+  - question: What customers have exactly 5 characters in their first column?
+    sql: SELECT col0, col1, col2 FROM awsdatacatalog.text_to_sql.customers WHERE LENGTH(col0)
+      = 5;
+  - question: What are the customer records where the second column contains the word
+      'Company'?
+    sql: SELECT col0, col1, col2, col3 FROM awsdatacatalog.text_to_sql.customers WHERE
+      col1 LIKE '%Company%';
+  - question: What customers are located in entries where the third column starts
+      with 'US'?
+    sql: SELECT col0, col1, col2 FROM awsdatacatalog.text_to_sql.customers WHERE col2
+      LIKE 'US%';
+  - question: What are the first 10 employee-territory assignments?
+    sql: SELECT employee_id, territory_id FROM awsdatacatalog.text_to_sql.employee_territories
+      LIMIT 10;
+  - question: How many unique employees are assigned to territories?
+    sql: SELECT COUNT(DISTINCT employee_id) as unique_employees FROM awsdatacatalog.text_to_sql.employee_territories;
+  - question: How many unique territories have employee assignments?
+    sql: SELECT COUNT(DISTINCT territory_id) as unique_territories FROM awsdatacatalog.text_to_sql.employee_territories;
+  - question: What are all the unique employee IDs that have territory assignments?
+    sql: SELECT DISTINCT employee_id FROM awsdatacatalog.text_to_sql.employee_territories
+      ORDER BY employee_id;
+  - question: What are all the unique territory IDs that have employee assignments?
+    sql: SELECT DISTINCT territory_id FROM awsdatacatalog.text_to_sql.employee_territories
+      ORDER BY territory_id;
+  - question: How many territory assignments does each employee have?
+    sql: SELECT employee_id, COUNT(*) as territory_count FROM awsdatacatalog.text_to_sql.employee_territories
+      GROUP BY employee_id ORDER BY territory_count DESC;
+  - question: How many employees are assigned to each territory?
+    sql: SELECT territory_id, COUNT(*) as employee_count FROM awsdatacatalog.text_to_sql.employee_territories
+      GROUP BY territory_id ORDER BY employee_count DESC;
+  - question: What are the territory assignments for employee ID 5?
+    sql: SELECT employee_id, territory_id FROM awsdatacatalog.text_to_sql.employee_territories
+      WHERE employee_id = 5;
+  - question: What are the first and last names of all employees?
+    sql: SELECT first_name, last_name FROM awsdatacatalog.text_to_sql.employees;
+  - question: How many employees are there in total?
+    sql: SELECT COUNT(*) as total_employees FROM awsdatacatalog.text_to_sql.employees;
+  - question: What are the unique job titles in the company?
+    sql: SELECT DISTINCT title FROM awsdatacatalog.text_to_sql.employees;
+  - question: Which employees work in London?
+    sql: SELECT first_name, last_name, city FROM awsdatacatalog.text_to_sql.employees
+      WHERE city = 'London';
+  - question: What are the names and hire dates of the 5 most recently hired employees?
+    sql: SELECT first_name, last_name, hire_date FROM awsdatacatalog.text_to_sql.employees
+      ORDER BY hire_date DESC LIMIT 5;
+  - question: How many employees are there in each city?
+    sql: SELECT city, COUNT(*) as employee_count FROM awsdatacatalog.text_to_sql.employees
+      GROUP BY city;
+  - question: Which employees have a title containing the word 'Sales'?
+    sql: SELECT first_name, last_name, title FROM awsdatacatalog.text_to_sql.employees
+      WHERE title LIKE '%Sales%';
+  - question: What are the names and countries of employees from the USA?
+    sql: SELECT first_name, last_name, country FROM awsdatacatalog.text_to_sql.employees
+      WHERE country = 'USA';
+  - question: What are the order ID, product ID, and unit price for the first 10 order
+      details?
+    sql: SELECT order_id, product_id, unit_price FROM awsdatacatalog.text_to_sql.order_details
+      LIMIT 10;
+  - question: What is the total revenue generated from all order details?
+    sql: SELECT SUM(unit_price * quantity * (1 - discount)) as total_revenue FROM
+      awsdatacatalog.text_to_sql.order_details;
+  - question: Which order details have a discount greater than 10%?
+    sql: SELECT order_id, product_id, discount FROM awsdatacatalog.text_to_sql.order_details
+      WHERE discount > 0.1;
+  - question: What are the top 5 highest unit prices and their corresponding product
+      IDs?
+    sql: SELECT product_id, unit_price FROM awsdatacatalog.text_to_sql.order_details
+      ORDER BY unit_price DESC LIMIT 5;
+  - question: How many unique products have been ordered?
+    sql: SELECT COUNT(DISTINCT product_id) as unique_products FROM awsdatacatalog.text_to_sql.order_details;
+  - question: What are the order details with quantities greater than 50 items?
+    sql: SELECT order_id, product_id, quantity, unit_price FROM awsdatacatalog.text_to_sql.order_details
+      WHERE quantity > 50;
+  - question: What is the average discount applied across all order details?
+    sql: SELECT AVG(discount) as average_discount FROM awsdatacatalog.text_to_sql.order_details;
+  - question: Which order details have no discount applied?
+    sql: SELECT order_id, product_id, unit_price FROM awsdatacatalog.text_to_sql.order_details
+      WHERE discount = 0;
+  - question: What are the order ID, customer ID, and order date for the first 10
+      orders?
+    sql: SELECT order_id, customer_id, order_date FROM awsdatacatalog.text_to_sql.orders
+      LIMIT 10;
+  - question: Which orders have freight costs greater than 100?
+    sql: SELECT order_id, freight, ship_country FROM awsdatacatalog.text_to_sql.orders
+      WHERE freight > 100;
+  - question: How many orders were placed in each country?
+    sql: SELECT ship_country, COUNT(*) as order_count FROM awsdatacatalog.text_to_sql.orders
+      GROUP BY ship_country;
+  - question: What are the highest freight costs and their corresponding order IDs?
+    sql: SELECT order_id, freight FROM awsdatacatalog.text_to_sql.orders ORDER BY
+      freight DESC LIMIT 5;
+  - question: Which unique shipping cities are available in the orders?
+    sql: SELECT DISTINCT ship_city FROM awsdatacatalog.text_to_sql.orders ORDER BY
+      ship_city;
+  - question: What are the product names and unit prices for all products?
+    sql: SELECT product_name, unit_price FROM awsdatacatalog.text_to_sql.products
+      LIMIT 10;
+  - question: Which products are currently discontinued?
+    sql: SELECT product_name, discontinued FROM awsdatacatalog.text_to_sql.products
+      WHERE discontinued = 1;
+  - question: What are the most expensive products by unit price?
+    sql: SELECT product_name, unit_price FROM awsdatacatalog.text_to_sql.products
+      ORDER BY unit_price DESC LIMIT 5;
+  - question: How many units are in stock for each product?
+    sql: SELECT product_name, units_in_stock FROM awsdatacatalog.text_to_sql.products
+      WHERE units_in_stock > 0;
+  - question: What is the average unit price of all products?
+    sql: SELECT AVG(unit_price) as average_price FROM awsdatacatalog.text_to_sql.products;
+  - question: Which products have low stock levels that need reordering?
+    sql: SELECT product_name, units_in_stock, reorder_level FROM awsdatacatalog.text_to_sql.products
+      WHERE units_in_stock <= reorder_level;
+  - question: What are the unique quantity per unit descriptions?
+    sql: SELECT DISTINCT quantity_per_unit FROM awsdatacatalog.text_to_sql.products;
+  - question: Which products have units on order?
+    sql: SELECT product_name, units_on_order FROM awsdatacatalog.text_to_sql.products
+      WHERE units_on_order > 0;
+  - question: What are all the region IDs and descriptions in the system?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region;
+  - question: Show me the first 5 regions ordered by region ID?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      ORDER BY region_id LIMIT 5;
+  - question: What are the unique region descriptions available?
+    sql: SELECT DISTINCT region_description FROM awsdatacatalog.text_to_sql.region;
+  - question: How many total regions are there in the database?
+    sql: SELECT COUNT(*) as total_regions FROM awsdatacatalog.text_to_sql.region;
+  - question: Which regions have an ID greater than 2?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      WHERE region_id > 2;
+  - question: What regions contain the word 'North' in their description?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      WHERE region_description LIKE '%North%';
+  - question: Show me regions ordered by their description alphabetically?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      ORDER BY region_description;
+  - question: What is the region with the highest region ID?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      ORDER BY region_id DESC LIMIT 1;
+  - question: Which regions have IDs between 1 and 3?
+    sql: SELECT region_id, region_description FROM awsdatacatalog.text_to_sql.region
+      WHERE region_id BETWEEN 1 AND 3;
+  - question: What are all the shipper companies and their contact phone numbers?
+    sql: SELECT company_name, phone FROM awsdatacatalog.text_to_sql.shippers;
+  - question: What are the first 5 shippers in the database?
+    sql: SELECT shipper_id, company_name FROM awsdatacatalog.text_to_sql.shippers
+      LIMIT 5;
+  - question: How many shipping companies are there in total?
+    sql: SELECT COUNT(*) as total_shippers FROM awsdatacatalog.text_to_sql.shippers;
+  - question: What are the unique company names of all shippers?
+    sql: SELECT DISTINCT company_name FROM awsdatacatalog.text_to_sql.shippers;
+  - question: Which shippers have phone numbers that start with '503'?
+    sql: SELECT company_name, phone FROM awsdatacatalog.text_to_sql.shippers WHERE
+      phone LIKE '503%';
+  - question: What are all shipper details ordered by company name alphabetically?
+    sql: SELECT shipper_id, company_name, phone FROM awsdatacatalog.text_to_sql.shippers
+      ORDER BY company_name;
+  - question: Which shipper has the highest shipper ID?
+    sql: SELECT shipper_id, company_name FROM awsdatacatalog.text_to_sql.shippers
+      ORDER BY shipper_id DESC LIMIT 1;
+  - question: What are the company names of shippers that contain the word 'Shipping'?
+    sql: SELECT company_name FROM awsdatacatalog.text_to_sql.shippers WHERE company_name
+      LIKE '%Shipping%';
+  - question: Which shippers have phone numbers that are not null?
+    sql: SELECT company_name, phone FROM awsdatacatalog.text_to_sql.shippers WHERE
+      phone IS NOT NULL;
+  - question: What are the supplier IDs and company names of all suppliers?
+    sql: SELECT supplier_id, company_name FROM awsdatacatalog.text_to_sql.suppliers
+      LIMIT 10;
+  - question: Which suppliers are located in the USA?
+    sql: SELECT company_name, city, country FROM awsdatacatalog.text_to_sql.suppliers
+      WHERE country = 'USA';
+  - question: How many suppliers are there in each country?
+    sql: SELECT country, COUNT(*) as supplier_count FROM awsdatacatalog.text_to_sql.suppliers
+      GROUP BY country ORDER BY supplier_count DESC;
+  - question: What are the contact details for suppliers in Germany?
+    sql: SELECT company_name, contact_name, phone FROM awsdatacatalog.text_to_sql.suppliers
+      WHERE country = 'Germany';
+  - question: Which unique cities have suppliers?
+    sql: SELECT DISTINCT city FROM awsdatacatalog.text_to_sql.suppliers ORDER BY city;
+  - question: What are the company names and addresses of suppliers in London?
+    sql: SELECT company_name, address FROM awsdatacatalog.text_to_sql.suppliers WHERE
+      city = 'London';
+  - question: Which suppliers have a homepage listed?
+    sql: SELECT company_name, homepage FROM awsdatacatalog.text_to_sql.suppliers WHERE
+      homepage IS NOT NULL AND homepage != '';
+  - question: What are the contact titles and names for suppliers in France?
+    sql: SELECT contact_name, contact_title FROM awsdatacatalog.text_to_sql.suppliers
+      WHERE country = 'France';
+  - question: Which suppliers are located in regions that are not null?
+    sql: SELECT company_name, region, country FROM awsdatacatalog.text_to_sql.suppliers
+      WHERE region IS NOT NULL;
+  - question: What are the top 5 suppliers alphabetically by company name?
+    sql: SELECT supplier_id, company_name FROM awsdatacatalog.text_to_sql.suppliers
+      ORDER BY company_name LIMIT 5;
+  - question: What are all the territory IDs and descriptions in the database?
+    sql: SELECT territory_id, territory_description FROM awsdatacatalog.text_to_sql.territories;
+  - question: Show me the first 5 territories with their region assignments?
+    sql: SELECT territory_id, territory_description, region_id FROM awsdatacatalog.text_to_sql.territories
+      LIMIT 5;
+  - question: Which territories belong to region 1?
+    sql: SELECT territory_id, territory_description FROM awsdatacatalog.text_to_sql.territories
+      WHERE region_id = 1;
+  - question: How many territories are there in total?
+    sql: SELECT COUNT(*) as total_territories FROM awsdatacatalog.text_to_sql.territories;
+  - question: What are the unique region IDs that have territories assigned?
+    sql: SELECT DISTINCT region_id FROM awsdatacatalog.text_to_sql.territories;
+  - question: Show me all territories ordered by their territory ID in descending
+      order?
+    sql: SELECT territory_id, territory_description, region_id FROM awsdatacatalog.text_to_sql.territories
+      ORDER BY territory_id DESC;
+  - question: How many territories are assigned to each region?
+    sql: SELECT region_id, COUNT(*) as territory_count FROM awsdatacatalog.text_to_sql.territories
+      GROUP BY region_id;
+  - question: What are the state names and their abbreviations?
+    sql: SELECT state_name, state_abbr FROM awsdatacatalog.text_to_sql.us_states LIMIT
+      10;
+  - question: Which states are located in the West region?
+    sql: SELECT state_name, state_region FROM awsdatacatalog.text_to_sql.us_states
+      WHERE state_region = 'West';
+  - question: How many states are in each region?
+    sql: SELECT state_region, COUNT(*) as state_count FROM awsdatacatalog.text_to_sql.us_states
+      GROUP BY state_region;
+  - question: What are the details for California?
+    sql: SELECT state_id, state_name, state_abbr, state_region FROM awsdatacatalog.text_to_sql.us_states
+      WHERE state_name = 'California';
+  - question: Which states have abbreviations starting with 'C'?
+    sql: SELECT state_name, state_abbr FROM awsdatacatalog.text_to_sql.us_states WHERE
+      state_abbr LIKE 'C%';
+  - question: What are all the unique regions in the dataset?
+    sql: SELECT DISTINCT state_region FROM awsdatacatalog.text_to_sql.us_states ORDER
+      BY state_region;
+  - question: Which states are in either the Northeast or Southeast regions?
+    sql: SELECT state_name, state_region FROM awsdatacatalog.text_to_sql.us_states
+      WHERE state_region IN ('Northeast', 'Southeast');
+  - question: What are the first 5 states when ordered alphabetically by name?
+    sql: SELECT state_name, state_abbr FROM awsdatacatalog.text_to_sql.us_states ORDER
+      BY state_name LIMIT 5;

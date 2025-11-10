@@ -1,0 +1,54 @@
+[
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "production"
+  },
+  {
+    "ParameterKey": "ImageTag",
+    "ParameterValue": "latest"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-xxxxx"
+  },
+  {
+    "ParameterKey": "SubnetIds",
+    "ParameterValue": "subnet-xxxxx,subnet-yyyyy"
+  },
+  {
+    "ParameterKey": "PostgresHost",
+    "ParameterValue": "postgres.example.com"
+  },
+  {
+    "ParameterKey": "PostgresPort",
+    "ParameterValue": "5432"
+  },
+  {
+    "ParameterKey": "PostgresDatabase",
+    "ParameterValue": "instantinsight"
+  },
+  {
+    "ParameterKey": "AthenaDatabase",
+    "ParameterValue": "text_to_sql"
+  },
+  {
+    "ParameterKey": "AthenaWorkGroup",
+    "ParameterValue": "primary"
+  },
+  {
+    "ParameterKey": "RedisHost",
+    "ParameterValue": "redis.example.com"
+  },
+  {
+    "ParameterKey": "RedisPort",
+    "ParameterValue": "6379"
+  },
+  {
+    "ParameterKey": "LambdaMemorySize",
+    "ParameterValue": "2048"
+  },
+  {
+    "ParameterKey": "LambdaTimeout",
+    "ParameterValue": "300"
+  }
+]

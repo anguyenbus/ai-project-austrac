@@ -1,0 +1,673 @@
+examples:
+  queries:
+    - question: 'Which asset registers have the most commissioned assets and highest total openning asset values?'
+      sql: |
+        SELECT
+          "Asset Register",
+          COUNT(*) as "Asset Count",
+          SUM("Opening Asset Cost Amount") as "Total Asset Cost"
+        FROM awsdatacatalog.customanalysers.asset_book_account
+        WHERE "Opening Asset Cost Amount" IS NOT NULL
+        AND STATUS = 'Commissioned'
+        GROUP BY "Asset Register"
+        ORDER BY "Total Asset Cost" DESC
+    - question: 'From the asset book accounts, can you list the top 20 assets with positive rates and costs, showing only their internal number, depreciation rate, opening cost, and a calculated book value (calculated as `Opening Asset Cost × (1 – Depreciation Rate ÷ 100)`)), all ranked by the highest rate then highest cost?'
+      sql: |
+        SELECT
+            "Asset Number Internal",
+            "Depreciation Rate Amount",
+            "Opening Asset Cost Amount",
+            ("Opening Asset Cost Amount" * (1 - "Depreciation Rate Amount" / 100)) as "Estimated Book Value"
+        FROM Asset_Book_Account
+        WHERE "Depreciation Rate Amount" > 0
+          AND "Opening Asset Cost Amount" > 0
+        ORDER BY "Depreciation Rate Amount" DESC, "Opening Asset Cost Amount" DESC
+        LIMIT 20
+    - question: 'For each asset register, what is the total number of records, the total committed purchase order amount, and the average committed purchase order amount? Please only include records with positive commitment amounts and sort by the highest total committed PO amount.'
+      sql: |
+        SELECT
+            "Asset Register",
+            COUNT(*) as "Asset Count",
+            SUM("Committed Purchase Orders CI Amount") as "Total Committed PO Amount",
+            AVG("Committed Purchase Orders CI Amount") as "Average Committed Amount"
+        FROM Asset_Book_Account
+        WHERE "Committed Purchase Orders CI Amount" > 0
+        GROUP BY "Asset Register"
+        ORDER BY "Total Committed PO Amount" DESC
+    # special case for non null status
+    - question: "What is the breakdown of assets by status (including null or empty values), and which statuses have the highest number of assets?"
+      sql: |
+        SELECT
+            "Status",
+            COUNT("Asset Number Internal") as "Asset Count"
+        FROM Asset_Book_Account
+        GROUP BY "Status"
+        ORDER BY "Asset Count" DESC
+    - question: 'For each asset register, what is the total asset count, as well as the average, minimum, and maximum unit cost? Please only include assets with positive unit costs and sort the results by the average unit cost in descending order.'
+      sql: |
+        SELECT
+            "Asset Register",
+            COUNT(*) as "Asset Count",
+            AVG("Unit Cost Amount") as "Average Unit Cost",
+            MIN("Unit Cost Amount") as "Min Unit Cost",
+            MAX("Unit Cost Amount") as "Max Unit Cost"
+        FROM Asset_Book_Account
+        WHERE "Unit Cost Amount" > 0
+        GROUP BY "Asset Register"
+        ORDER BY "Average Unit Cost" DESC
+    - question: "For each combination of asset register and status, please show the total asset count, the total opening asset cost, and the cost per unit. Calculate cost per unit, ensuring you handle division by zero. Only include assets with a positive opening cost. From the results, only show groups containing more than one asset, and sort them by the highest total asset cost."
+      sql: |
+        SELECT
+            "Asset Register",
+            "Status",
+            COUNT(*) as "Asset Count",
+            SUM("Opening Asset Cost Amount") as "Total Asset Cost",
+            (SUM("Opening Asset Cost Amount") / NULLIF(SUM("Units Acquired Number"), 0)) as "Cost Per Unit"
+        FROM Asset_Book_Account
+        WHERE "Opening Asset Cost Amount" > 0
+        GROUP BY "Asset Register", "Status"
+        HAVING COUNT(*) > 1
+        ORDER BY "Total Asset Cost" DESC
+    - question: 'From the asset book accounting records, group by asset register and book to find the average depreciation rate and total opening asset cost. Only use records where the depreciation rate and opening cost are positive. After grouping, show only the groups with an average depreciation rate over 10. Finally, sort the results in descending order based on the total asset cost and the average depreciation rate.'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Book",
+            AVG("Depreciation Rate Amount") as "Avg Depreciation Rate",
+            SUM("Opening Asset Cost Amount") as "Total Asset Cost"
+        FROM Asset_Book_Account
+        WHERE "Depreciation Rate Amount" > 0
+          AND "Opening Asset Cost Amount" > 0
+        GROUP BY "Asset Register", "Book"
+        HAVING AVG("Depreciation Rate Amount") > 10
+        ORDER BY (AVG("Depreciation Rate Amount") * SUM("Opening Asset Cost Amount") / 100) DESC
+    - question: 'For each asset register and status, provide a capital efficiency summary. The summary should show the total asset count, the total committed purchase order amount, and the acquisition efficiency percentage. Only include records where either the committed amount or the acquisition amount is positive, and sort the final report by the highest total committed amount.'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Status",
+            COUNT(*) as "Asset Count",
+            SUM("Committed Purchase Orders CI Amount") as "Total Committed Amount",
+            (SUM("Acquisitions to Date CI Amount") / NULLIF(SUM("Committed Purchase Orders CI Amount"), 0) * 100) as "Acquisition Efficiency Pct"
+        FROM Asset_Book_Account
+        WHERE "Committed Purchase Orders CI Amount" > 0
+          OR "Acquisitions to Date CI Amount" > 0
+        GROUP BY "Asset Register", "Status"
+        ORDER BY "Total Committed Amount" DESC
+    - question: 'From the asset book accounting records, please group by asset register and valuation type code. For each group, show the total asset count, the total replacement cost, and the average replacement cost. Only use records where both the replacement cost and the opening asset cost are not null, and sort the final results by the highest total replacement cost.'
+      sql: |
+        SELECT
+            "asset register",
+            "valuation type - code",
+            COUNT(*) as "asset count",
+            SUM("replacement cost") as "total replacement cost",
+            AVG("replacement cost") as "avg replacement cost"
+        FROM asset_book_account
+        WHERE "replacement cost" IS NOT NULL
+          AND "opening asset cost amount" IS NOT NULL
+        GROUP BY "asset register", "valuation type - code"
+        ORDER BY "total replacement cost" DESC
+    # 10
+    - question: 'From the asset book data, please group by asset register and disposal type code. For each group, show the total asset count, the total gain/loss, and the average gain/loss. Only include records that have either a disposal type (must not be null) or a retirement date AND also have a positive opening cost. Sort the final results by the highest total gain/loss.'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Disposal Type - Code",
+            COUNT(*) as "Asset Count",
+            SUM("Gain/Loss") as "Total Gain Loss",
+            AVG("Gain/Loss") as "Avg Gain Loss Per Asset"
+        FROM Asset_Book_Account
+        WHERE ("Disposal Type - Code" IS NOT NULL OR "Retirement Date" IS NOT NULL)
+          AND "Opening Asset Cost Amount" > 0
+        GROUP BY "Asset Register", "Disposal Type - Code"
+        ORDER BY "Total Gain Loss" DESC
+    # Special case
+    - question: 'For each non-null transaction type in the asset register financial transactions, what is the total transaction value and the average transaction size, and how do these transaction types rank when ordered by average transaction value?'
+      sql: |
+        SELECT
+          "transaction type", 
+          sum("transaction amount") as total_value, 
+          avg("transaction amount") as average_value
+        FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+        WHERE "transaction amount" > 0
+        AND "transaction type" IS NOT NULL
+        GROUP BY "transaction type"
+        ORDER BY average_value DESC
+    - question: 'What is the breakdown by asset register showing total transaction amounts and unique asset counts for commissioned assets with positive transaction values?'
+      sql: |
+        SELECT 
+          "asset register",
+          sum("financial transaction amount") as total_financial_amount,
+          count(distinct asset) as unique_assets
+        FROM awsdatacatalog.customanalysers.asset_reg_transaction_financialtransaction
+        WHERE "register asset financial status" = 'Commissioned'
+        AND "financial transaction amount" > 0
+        GROUP BY "asset register"
+        ORDER BY total_financial_amount DESC
+    - question: 'What is the breakdown of financial transactions by posting status, showing transaction counts, total amounts, and average amounts, ranked by which statuses have the most transactions?'
+      sql: |
+        SELECT
+            "Financial Posting Status",
+            COUNT(*) as "Transaction Count",
+            SUM("Financial Transaction Amount") as "Total Amount",
+            AVG("Financial Transaction Amount") as "Average Amount"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Financial Transaction Amount" IS NOT NULL
+        GROUP BY "Financial Posting Status"
+        ORDER BY "Transaction Count" DESC
+    - question: 'For each disposal type, what are the disposal transaction statistics—including the number of transactions, total gains or losses, and average gain or loss—and how do these disposal types rank by total gains or losses?'
+      sql: |
+        SELECT
+            "Transaction Disposal Type",
+            COUNT(*) as "Disposal Count",
+            SUM("Gain Loss Amount") as "Total Gain Loss",
+            AVG("Gain Loss Amount") as "Average Gain Loss"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Transaction Disposal Type" IS NOT NULL AND "Gain Loss Amount" IS NOT NULL
+        GROUP BY "Transaction Disposal Type"
+        ORDER BY "Total Gain Loss" DESC
+    - question: 'For each accounting period (must not be larger than 12 months), show the total depreciation amount, the number of depreciation entries, and the average depreciation value, including only positive depreciation amounts, sorted by accounting period in descending order.'
+      sql: |
+        SELECT
+            "Accounting Period",
+            COUNT(*) as "Transaction Count",
+            SUM("Depreciation Period Opening Depreciation") as "Total Depreciation",
+            AVG("Depreciation Period Opening Depreciation") as "Avg Depreciation"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Depreciation Period Opening Depreciation" > 0
+        GROUP BY "Accounting Period"
+        ORDER BY "Accounting Period" DESC
+    - question: 'Which combinations of asset register, transaction type, and financial posting status have more than five transactions with non-null transaction amounts? Additionally, how are these combinations ranked based on their transaction counts in descending order?'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Transaction Type",
+            "Financial Posting Status",
+            COUNT(*) as "Transaction Count"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Transaction Amount" IS NOT NULL
+        GROUP BY "Asset Register", "Transaction Type", "Financial Posting Status"
+        HAVING COUNT(*) > 5
+        ORDER BY "Transaction Count" DESC
+    ## special case
+    - question: 'For each combination of asset register, transaction type, and processing group, what is the total opening depreciation amount, and how do these combinations rank by total depreciation value?'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Transaction Type",
+            "Processing Group",
+            SUM("Depreciation Period Opening Depreciation") as "Total Depreciation"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Depreciation Period Opening Depreciation" > 0
+        GROUP BY "Asset Register", "Transaction Type", "Processing Group"
+        ORDER BY "Total Depreciation" DESC
+    - question: 'For each unique combination of Asset Register, Transaction Disposal Type, and Financial Transaction Document Type, what is the total number of disposal transactions where the Transaction Disposal Type is not null and the Disposed Asset Amount is greater than zero, ordered from the combinations with the highest disposal counts to the lowest?'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Transaction Disposal Type",
+            "Financial Transaction Document Type",
+            COUNT(*) as "Disposal Count"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Transaction Disposal Type" IS NOT NULL AND "Disposed Asset Amount" > 0
+        GROUP BY "Asset Register", "Transaction Disposal Type", "Financial Transaction Document Type"
+        ORDER BY "Disposal Count" DESC
+    - question: 'For each asset register and transaction valuation type (not null), how many revaluation transactions have occurred, and what is the total revalued amount, considering only those transactions where either the old or new revaluation reserve net amount is present?'
+      sql: |
+        SELECT
+            "Asset Register",
+            "Transaction Valuation Type",
+            COUNT(*) as "Revaluation Count",
+            SUM("Transaction Amount") as "Total Revaluation"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Transaction Valuation Type" IS NOT NULL AND ("Old Revaluation Reserve Net Amount" IS NOT NULL OR "New Revaluation Reserve Net Amount" IS NOT NULL)
+        GROUP BY "Asset Register", "Transaction Valuation Type"
+        ORDER BY "Total Revaluation" DESC
+    # 20
+    - question: 'For each financial transaction ledger, document type, and posted status, which combinations have the highest number of transactions (regardless of posting status) where both the transaction amount and book creation date are recorded?'
+      sql: |
+        SELECT
+            "Financial Transaction Ledger",
+            "Financial Transaction Document Type",
+            "Financial Transaction Posted Status",
+            COUNT(*) as "Transaction Count"
+        FROM Asset_Reg_Transaction_FinancialTransaction
+        WHERE "Financial Transaction Amount" IS NOT NULL AND "Book Transaction Date Created" IS NOT NULL
+        GROUP BY "Financial Transaction Ledger", "Financial Transaction Document Type", "Financial Transaction Posted Status"
+        ORDER BY "Transaction Count" DESC
+    - question: 'For each ledger name, considering only rows where account balance amount is not null, how many distinct internal accounts are included, what is the total sum and average of their account balance amount values, and rank the ledger names in descending order based on the absolute value of the total balance?'
+      sql: |
+        SELECT
+            "Ledger Name",
+            COUNT(DISTINCT "Internal Account") AS "Account Count",
+            SUM("Account Balance Amount") AS "Total Balance",
+            AVG("Account Balance Amount") AS "Average Balance"
+        FROM General_Ledger_Details
+        WHERE "Account Balance Amount" IS NOT NULL
+        GROUP BY "Ledger Name"
+        ORDER BY ABS("Total Balance") DESC
+    - question: 'What are the top 20 internal accounts by transaction volume, showing their transaction counts, total outstanding amounts, and current account balances?'
+      sql: |
+        SELECT
+            "Internal Account",
+            COUNT(*) AS "Transaction Count",
+            SUM("Ledger Account Transaction Outstanding Amount") AS "Total Outstanding Amount",
+            SUM("Account Balance Amount") AS "Current Account Balance"
+        FROM General_Ledger_Details
+        WHERE "Transaction Amount" IS NOT NULL
+        GROUP BY "Internal Account"
+        ORDER BY "Transaction Count" DESC, "Total Outstanding Amount" DESC
+        LIMIT 20
+    - question: 'Within our general ledger detail records, what is the count of transactions, the total transaction amount, and the average transaction amount for each transaction type, ordered by highest total amount?'
+      sql: |
+        SELECT
+            "Transaction Type",
+            COUNT(*) AS "Transaction Count",
+            SUM("Transaction Amount") AS "Total Amount",
+            AVG("Transaction Amount") AS "Average Amount"
+        FROM General_Ledger_Details
+        WHERE "Transaction Amount" IS NOT NULL
+        GROUP BY "Transaction Type"
+        ORDER BY "Total Amount" DESC
+    - question: 'For each ledger account pay type (excluding null values), considering only internal accounts where the number of open items is greater than zero, how many distinct accounts are included, what is the total number of open items across those accounts, and what is the average number of open items per distinct account, with results ranked in descending order of total open items?'
+      sql: |
+        SELECT
+            "Ledger Account Pay Type",
+            COUNT(DISTINCT "Internal Account") AS "Account Count",
+            SUM("Number of Open Items") AS "Total Open Items",
+            AVG("Number of Open Items") AS "Average Open Items Per Account"
+        FROM General_Ledger_Details
+        WHERE "Number of Open Items" > 0
+        AND "ledger account pay type" IS NOT NULL
+        GROUP BY "Ledger Account Pay Type"
+        ORDER BY "Total Open Items" DESC
+    - question: 'What is the transaction activity analysis by period, showing transaction counts, total amounts, and variety of document types used, ordered from most recent to oldest periods?'
+      sql: |
+        SELECT
+            "Period",
+            COUNT(*) AS "Transaction Count",
+            SUM("Transaction Amount") AS "Total Amount",
+            COUNT(DISTINCT "Document Type Description") AS "Document Types Used"
+        FROM General_Ledger_Details
+        WHERE "Transaction Amount" IS NOT NULL
+          AND "Period" IS NOT NULL
+        GROUP BY "Period"
+        ORDER BY "Period" DESC
+    - question: 'For each combination of ledger name and ledger account pay type, grouped by ledger account transaction status, and considering only groups with more than 10 records where the account balance amount is not null, how many distinct internal accounts are included and what is the total account balance, with results ranked in descending order of absolute total account balance?'
+      sql: |
+        SELECT
+            "Ledger Name",
+            "Ledger Account Pay Type",
+            COUNT(DISTINCT "Internal Account") AS "Account Count",
+            SUM("Account Balance Amount") AS "Total Account Balance"
+        FROM General_Ledger_Details
+        WHERE "Account Balance Amount" IS NOT NULL
+        GROUP BY "Ledger Name", "Ledger Account Pay Type", "Ledger Account Transaction Status"
+        HAVING COUNT(*) > 10
+        ORDER BY ABS("Total Account Balance") DESC
+    - question: 'For each combination of chart name, transaction type, and document type description, considering only rows where the expense commitment amount is greater than zero and the transaction amount is not null, how many transactions occurred and what is the total committed amount, with results ranked in descending order of total commitment amount?'
+      sql: |
+        SELECT
+            "Chart Name",
+            "Transaction Type",
+            COUNT(*) AS "Transaction Count",
+            SUM("Expense Commitment Amount") AS "Total Commitment Amount"
+        FROM General_Ledger_Details
+        WHERE "Expense Commitment Amount" > 0
+          AND "Transaction Amount" IS NOT NULL
+        GROUP BY "Chart Name", "Transaction Type", "Document Type Description"
+        ORDER BY "Total Commitment Amount" DESC
+    - question: 'For each combination of ledger name, account pay type, and receipt usage status that has any recorded outstanding or applied balance (including zero values), how many transactions are in each group and what is the total outstanding balance, ordered by highest total outstanding?'
+      sql: |
+        SELECT
+            "Ledger Name",
+            "Ledger Account Pay Type",
+            COUNT(*) AS "Transaction Count",
+            SUM("Ledger Account Transaction Outstanding Amount") AS "Total Outstanding"
+        FROM General_Ledger_Details
+        WHERE "Ledger Account Transaction Outstanding Amount" IS NOT NULL
+          OR "Ledger Account Transaction Applied Amount" IS NOT NULL
+        GROUP BY "Ledger Name", "Ledger Account Pay Type", "Receipt Usage Status"
+        ORDER BY "Total Outstanding" DESC
+    - question: 'For each chart name, control description, and pay-usage status group with both a non-null balance and transaction amount—and with more than five unique accounts—what is the distinct account count and total balance per group, ordered by highest total balance?'
+      sql: |
+        SELECT
+            "Chart Name",
+            "Ledger Control Description",
+            COUNT(DISTINCT "Internal Account") AS "Account Count",
+            SUM("Balance Amount") AS "Total Balance"
+        FROM General_Ledger_Details
+        WHERE "Balance Amount" IS NOT NULL
+          AND "Transaction Amount" IS NOT NULL
+        GROUP BY "Chart Name", "Ledger Control Description", "Ledger Account Pay Usage Status"
+        HAVING COUNT(DISTINCT "Internal Account") > 5
+        ORDER BY "Total Balance" DESC
+    - question: 'For each ledger account transaction source, document register, and transaction type where the original amount is present and either the retention (base) amount or original discount amount is greater than zero, how many entries exist and what is their total retention (base) amount, ordered by highest total retention?'
+      sql: |
+        SELECT
+            "Ledger Account Transaction Source",
+            "Document Register",
+            COUNT(*) AS "Transaction Count",
+            SUM("Retention (Base) Amount") AS "Total Retention Amount"
+        FROM General_Ledger_Details
+        WHERE "Original Amount" IS NOT NULL
+          AND ("Retention (Base) Amount" > 0 OR "Original Discount Amount" > 0)
+        GROUP BY "Ledger Account Transaction Source", "Document Register", "Transaction Type"
+        ORDER BY "Total Retention Amount" DESC
+
+    - question: 'For each account type in the general ledger financial chart of accounts, how many accounts are included, with results showing the total count of accounts per type?'
+      sql: |
+        SELECT
+          "Account Type",
+          COUNT(*) AS account_count
+        FROM general_ledger_financial_chart_accounts
+        GROUP BY "Account Type"
+    - question: 'What is the average discount percentage offered for each different chart type in the general ledger? Please provide a simple average without any filtering or sorting.'
+      sql: |
+        SELECT
+          "Chart Type",
+          AVG("Discount Percentage") AS avg_discount
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Chart Type"
+    - question: 'I need a simple count of all accounts from the general ledger, broken down by their recorded activity status. Please show me a total for each distinct status value found in the system.'
+      sql: |
+        SELECT
+          "Is Active",
+          COUNT(*) AS account_count
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Is Active"
+    - question: 'For each payment method available in the general ledger, what is the average time given for payment? Your calculation should provide a straightforward average, ensuring no payment methods or term lengths are excluded.'
+      sql: |
+        SELECT
+          "Payment Method",
+          AVG("Terms Days") AS avg_terms
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Payment Method"
+    - question: 'I need a straightforward count of all accounts from the general ledger, grouped by their payee state. Please provide a complete list showing the total for every state found in the system, without any special sorting.'
+      sql: |
+        SELECT
+          "Payee State",
+          COUNT(*) AS account_count
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Payee State"
+    - question: 'For every combination of account type and payment method in the general ledger, what is their total sum and simple average for the discount percentage? It''s crucial that the calculation includes all records, even those with a zero discount, to ensure the figures are accurate.'
+      sql: |
+        SELECT
+          "Account Type",
+          "Payment Method",
+          SUM("Discount Percentage") AS total_discount,
+          AVG("Discount Percentage") AS avg_discount
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Account Type", "Payment Method"
+    - question: 'Can you analyze the accounts in the general ledger by chart type and active status? For each combination, I need the total number of accounts and the average number of days for payment terms. Please provide the raw results without any specific sorting.'
+      sql: |
+        SELECT
+          "Chart Type",
+          "Is Active",
+          COUNT(*) AS account_count,
+          AVG("Terms Days") AS avg_terms
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Chart Type", "Is Active"
+    - question: 'Please provide a statistical summary of the percentage values from the financial chart of accounts. Group the data by both account type and chart status, and for each group, show the average, minimum, and maximum percentage.'
+      sql: |
+        SELECT
+          "Account Type",
+          "Chart Status",
+          AVG("Percentage") AS avg_percentage,
+          MIN("Percentage") AS min_percentage,
+          MAX("Percentage") AS max_percentage
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Account Type", "Chart Status"
+    - question: 'Show me the total number of accounts from the general ledger, categorized by both the business type and the payment method used.'
+      sql: |
+        SELECT
+          "Business Type",
+          "Payment Method",
+          COUNT(*) AS account_count
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Business Type", "Payment Method"
+    - question: 'I need a report from the general ledger to analyze payment terms. Group the data by account type and payee state, and for each combination, please provide a straightforward calculation of the total account count, the average payment term days, and the average discount days, ensuring no records are filtered out.'
+      sql: |
+        SELECT
+          "Account Type",
+          "Payee State",
+          COUNT(*) AS account_count,
+          AVG("Terms Days") AS avg_terms,
+          AVG("Discount Days") AS avg_discount_days
+        FROM General_Ledger_Financial_Chart_Accounts
+        GROUP BY "Account Type", "Payee State"
+    - question: "From the document file charges, calculate the total debit value and count the number of documents for each document file status. The final result should be sorted by the total debit amount in descending order."
+      sql: |
+        SELECT
+            "Document File Status",
+            SUM("Total Debits") as total_debit_amount,
+            COUNT(*) as document_count
+        FROM Document_File_Charges_GLF
+        GROUP BY "Document File Status"
+        ORDER BY total_debit_amount DESC;
+    - question: "For each combination of document file status and processing group in the document charges data, what are the total debits, total credits, total balance amount, the number of transactions, and the average total document amount, with results ranked in descending order of total debits?"
+      sql: |
+        SELECT
+            "Document File Status",
+            "Processing Group",
+            SUM("Total Debits") as total_debits,
+            SUM("Total Credits") as total_credits,
+            SUM("Total Balance Amount") as total_balance,
+            COUNT(*) as transaction_count,
+            AVG("Total Document Amount") as avg_document_amount
+        FROM Document_File_Charges_GLF
+        GROUP BY "Document File Status", "Processing Group"
+        ORDER BY total_debits DESC;
+    - question: "What is the total cumulative balance for each agreement charge system, ordered from highest to lowest?"
+      sql: |
+        SELECT 
+            "Agreement Charge System", 
+            SUM("Cumulative Balance Amount") as total_cumulative_balance_amount 
+        FROM agreement_charges_billing 
+        GROUP BY "Agreement Charge System" 
+        ORDER BY total_cumulative_balance_amount DESC
+    - question: "Can you give me a complete statistical overview of the cumulative balance for each agreement charge system? I need the count, total, average, minimum, maximum, and standard deviation, sorted by the highest total balance."
+      sql: |
+        SELECT 
+            "Agreement Charge System",
+            COUNT(*) AS record_count,
+            SUM("Cumulative Balance Amount") AS total_cumulative_balance_amount,
+            AVG("Cumulative Balance Amount") AS avg_cumulative_balance_amount,
+            MIN("Cumulative Balance Amount") AS min_cumulative_balance_amount,
+            MAX("Cumulative Balance Amount") AS max_cumulative_balance_amount,
+            STDDEV("Cumulative Balance Amount") AS stddev_cumulative_balance_amount
+        FROM agreement_charges_billing
+        GROUP BY "Agreement Charge System"
+        ORDER BY total_cumulative_balance_amount DESC;
+    - question: "What is the total agreement rate amount for each charge system, listed in descending order?"
+      sql: |
+        SELECT 
+            "agreement charge system", 
+            SUM("agreement rate amount") AS total_rate_amount
+        FROM 
+            awsdatacatalog.customanalysers.agreement_charges_billing_rate
+        GROUP BY 
+            "agreement charge system"
+        ORDER BY 
+            total_rate_amount DESC;
+    - question: "For each combination of agreement charge system name and agreement status in the billing rates data, what are the total agreement rate amount, the total VAT-inclusive amount, the number of records, and the average agreement rate amount, with results sorted in descending order of total agreement rate amount?"
+      sql: |
+        SELECT 
+            "Agreement Charge System", 
+            "Agreement Status",
+            SUM("Agreement Rate Amount") AS total_agreement_rate_amount,
+            SUM("Agreement Vat Inclusive Amount") AS total_agreement_vat_inclusive_amount,
+            COUNT(*) AS record_count,
+            AVG("Agreement Rate Amount") AS avg_agreement_rate_amount
+        FROM 
+            agreement_charges_billing_rate
+        GROUP BY 
+            "Agreement Charge System", 
+            "Agreement Status"
+        ORDER BY 
+            total_agreement_rate_amount DESC;
+    - question: "What is the total requested amount for each type of expense, ranked from highest to lowest?"
+      sql: |
+        SELECT
+            "expense type",
+            SUM("request amount") as Total_Request_Amount
+        FROM awsdatacatalog.customanalysers.expense_line_system_type
+        WHERE "request amount" IS NOT NULL
+        GROUP BY "expense type"
+        ORDER BY Total_Request_Amount DESC;
+    - question: "Can you provide a detailed analysis of expenses, categorized by expense type and payment method? For each category, I need to see the transaction count, total and average requested amounts, as well as the total completed and pending amounts. Please sort the results primarily by expense type, and then by the highest total requested amount."
+      sql: |
+        SELECT
+            "expense type",
+            "payment method",
+            COUNT(*) as Transaction_Count,
+            SUM("request amount") as Total_Request_Amount,
+            AVG("request amount") as Avg_Request_Amount,
+            SUM("final complete amount") as Total_Final_Complete_Amount,
+            SUM("final pending amount") as Total_Final_Pending_Amount
+        FROM awsdatacatalog.customanalysers.expense_line_system_type
+        WHERE "expense type" IS NOT NULL AND "payment method" IS NOT NULL
+        GROUP BY "expense type", "payment method"
+        ORDER BY "expense type", Total_Request_Amount DESC;
+    - question: "From the ledger reconciliation data, what is the total transaction match amount for each account group? Only include transactions with a non-null match amount, and sort the results from largest to smallest total amount."
+      sql: |
+        SELECT
+            "account group",
+            SUM("ledger book transaction match amount") as Total_Match_Amount
+        FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+        WHERE "ledger book transaction match amount" IS NOT NULL
+        GROUP BY "account group"
+        ORDER BY Total_Match_Amount DESC;
+    - question: "I need a reconciliation performance report from the ledger transactions. Can you break it down by account group and ledger book status, showing the transaction count, total and average matched amounts, total secondary amount, and the count of successfully matched items? The report should be sorted first by account group, then by the highest total matched amount."
+      sql: |
+        SELECT
+            "account group",
+            "ledger book status",
+            COUNT(*) as Transaction_Count,
+            SUM("ledger book transaction match amount") as Total_Match_Amount,
+            AVG("ledger book transaction match amount") as Avg_Match_Amount,
+            SUM("ledger book transaction second amount") as Total_Second_Amount,
+            SUM(CASE WHEN "ledger book transaction matched ind" = 'Y' THEN 1 ELSE 0 END) as Matched_Count
+        FROM awsdatacatalog.customanalysers.reconciliation_account_group_ledger_transaction
+        WHERE "account group" IS NOT NULL AND "ledger book status" IS NOT NULL
+        GROUP BY "account group", "ledger book status"
+        ORDER BY "account group", Total_Match_Amount DESC;
+    - question: "Combine the agreement charges billing balances with their corresponding aggregated billing rates. For each unique combination of charge system, profile, agreement number, and charge type, show the opening and cumulative balances alongside the total rate amount, total VAT inclusive amount, total VAT amount, and total charge bill period amount."
+      sql: |
+        with cte_bill_rate as
+        (
+        select
+        "Agreement Charge System", "agreement profile code", "agreement number", "charge type code",
+        sum("agreement rate amount") as "agreement rate amount",
+        sum("agreement vat inclusive amount") as "agreement vat inclusive amount",
+        sum("agreement vat amount") as "agreement vat amount",
+        sum("charge bill period amount") as "charge bill period amount"
+        from agreement_charges_billing_rate
+        group by "Agreement Charge System", "agreement profile code", "agreement number", "charge type code"
+        )
+        select a."Agreement Charge System", a."agreement profile code", a."agreement number", a."charge type code",
+        a."opening balance amount", a."cumulative balance amount",
+        b."agreement rate amount", b."agreement vat inclusive amount", b."agreement vat amount", b."charge bill period amount"
+        from agreement_charges_billing a
+        left join cte_bill_rate b
+        on a."Agreement Charge System" = b."Agreement Charge System"
+        and a."agreement profile code" = b."agreement profile code"
+        and a."agreement number" = b."agreement number"
+        and a."charge type code" = b."charge type code"
+        ;
+    - question: "Provide a consolidated view of asset costs and their related financial transactions. For each asset, join the aggregated current and replacement costs from the asset book account details with the aggregated transaction, depreciation, and disposal amounts from the asset register financial transactions."
+      sql: |
+        with cte_reg_trns as (
+        select "asset register", asset
+        ,sum("transaction amount") as "transaction amount"
+        ,sum("depreciation period opening asset cost") as "depreciation period opening asset cost"
+        ,sum("disposed asset amount") as "disposed asset amount"
+        ,sum("financial transaction amount") as "financial transaction amount"
+        from asset_reg_transaction_financialtransaction
+        group by "asset register", asset
+        )
+        ,cte_reg_book as (
+        select
+        "asset register", "asset number internal",
+        sum("current asset cost") as "current asset cost",
+        sum("replacement cost") as "replacement cost"
+        from asset_book_account
+        group by "asset register", "asset number internal"
+        )
+        select a.*,
+        b."transaction amount", b."depreciation period opening asset cost", b."disposed asset amount", b."financial transaction amount"
+        from cte_reg_book a
+        inner join cte_reg_trns b
+        on a."asset register" = b."asset register"
+        and a."asset number internal" = b.asset
+        ;
+    - question: "From the financial delegation details, calculate the total and average delegation limit for each unique delegation name, and sort the results by the highest total limit."
+      sql: |
+        SELECT
+            "Delegation Name",
+            SUM("delegation limit") as "total delegation limit",
+            AVG("delegation limit") as "average delegation limit"
+        FROM Financial_Delegation_Item_Details
+        GROUP BY "Delegation Name"
+        ORDER BY "total delegation limit" desc;
+    - question: "From the financial delegation details, what is the total and average delegation limit for each delegation profile name? Please order the output by the total delegation limit in descending order."
+      sql: |
+        SELECT
+            "Delegation Profile Name",
+            SUM("delegation limit") as "total delegation limit",
+            AVG("delegation limit") as "average delegation limit"
+        FROM Financial_Delegation_Item_Details
+        GROUP BY "Delegation Profile Name"
+        ORDER BY "total delegation limit" desc;
+    - question: "For each delegation name within the financial delegation details, calculate the total and average for the default delegation limit. Sort the results by the highest total default limit."
+      sql: |
+        SELECT
+            "Delegation Name",
+            SUM("Delegation Default Limit") as "total_delegation default limit",
+            AVG("Delegation Default Limit") as "avg_delegation default limit"
+        FROM Financial_Delegation_Item_Details
+        GROUP BY "Delegation Name"
+        ORDER BY "total_delegation default limit" DESC;
+
+    - question: 'For each stocktake status in the inventory stocktake product code,
+      count the number of items, calculate the total inventory value, and find the
+      average unit cost. Order the results by the highest item count.'
+      sql: |
+        SELECT
+          "StockTake Status",
+          COUNT(*) as item_count,
+          SUM("Average Cost" * "Quantity On Hand") as total_inventory_value,
+          AVG("Average Cost") as avg_unit_cost
+        FROM awsdatacatalog.customanalysers.inventory_stocktake_product_code
+        WHERE "Average Cost" IS NOT NULL AND "Quantity On Hand" IS NOT NULL
+        GROUP BY "StockTake Status"
+        ORDER BY item_count DESC;
+    - question: 'Group the inventory stocktake product code by stocktake location.
+      For each location, count the total items, calculate the total inventory value,
+      and sum the absolute adjustment quantity at close. Order the results by the
+      highest inventory value.'
+      sql: |
+        SELECT
+          "StockTake Location",
+          COUNT(*) as total_items,
+          SUM("Average Cost" * "Quantity On Hand") as inventory_value,
+          SUM(ABS("Adjustment Quantity At Close")) as total_adjustments
+        FROM awsdatacatalog.customanalysers.inventory_stocktake_product_code
+        WHERE "Average Cost" IS NOT NULL AND "Quantity On Hand" IS NOT NULL
+        GROUP BY "StockTake Location"
+        ORDER BY inventory_value DESC;
+    - question: 'For product groups in the inventory stocktake product code with at least 100 products, calculate the product count, total inventory value, and the average absolute adjustment quantity. Show the top 15 results, ordered by the highest total value.'
+      sql: |
+        SELECT
+          "Product Group Code",
+          COUNT(*) as product_count,
+          SUM("Average Cost" * "Quantity On Hand") as total_value,
+          AVG(ABS("Adjustment Quantity At Close")) as avg_adjustment
+        FROM awsdatacatalog.customanalysers.inventory_stocktake_product_code
+        WHERE "Product Group Code" IS NOT NULL
+          AND "Average Cost" IS NOT NULL
+          AND "Quantity On Hand" IS NOT NULL
+        GROUP BY "Product Group Code"
+        HAVING COUNT(*) >= 100
+        ORDER BY total_value DESC
+        LIMIT 15;

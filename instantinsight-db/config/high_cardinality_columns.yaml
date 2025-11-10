@@ -1,0 +1,9 @@
+# High-cardinality columns for RAG processing
+# Template
+# columns:
+# - table: <table_name>
+#   column: <column_name>
+
+columns:
+  - table: document_file_charges_glf
+    column: city/town

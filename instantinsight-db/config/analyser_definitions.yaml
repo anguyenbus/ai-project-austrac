@@ -1,0 +1,80 @@
+# Default settings - applied to all Analysers
+_default:
+  safe_to_join_with: []  # Empty = DANGEROUS TO JOIN (safe default)
+  warnings:
+    - "Analyser with embedded business logic"
+    - "Joining with other Analysers may cause incorrect results"
+
+# =============================================================================
+# SAFE JOINS AND/OR GRANULARITY - Only add when verified by SME/Data Engineer
+# =============================================================================
+
+categories:
+  unique_key: ["category_id"]
+  grain: "One row per product category"
+  safe_to_join_with: ["products"]
+
+customer_customer_demo:
+  unique_key: ["customer_id", "customer_type_id"]
+  grain: "Customer to customer demographics mapping - a customer can belong to multiple demographic types"
+  safe_to_join_with: ["customers", "customer_demographics"]
+
+customer_demographics:
+  unique_key: ["customer_type_id"]
+  grain: "One row per customer demographic type"
+  safe_to_join_with: ["customer_customer_demo"]
+
+customers:
+  unique_key: ["customer_id"]
+  grain: "One row per customer"
+  safe_to_join_with: ["orders", "customer_customer_demo"]
+
+employees:
+  unique_key: ["employee_id"]
+  grain: "One row per employee"
+  safe_to_join_with: ["orders", "employee_territories"]
+
+employee_territories:
+  unique_key: ["employee_id", "territory_id"]
+  grain: "Employee to territory assignment - an employee can be assigned to multiple territories"
+  safe_to_join_with: ["employees", "territories"]
+
+order_details:
+  unique_key: ["order_id", "product_id"]
+  grain: "Order line items - one row per product per order"
+  safe_to_join_with: ["orders", "products"]
+
+orders:
+  unique_key: ["order_id"]
+  grain: "One row per order"
+  safe_to_join_with: ["customers", "employees", "shippers", "order_details"]
+
+products:
+  unique_key: ["product_id"]
+  grain: "One row per product"
+  safe_to_join_with: ["categories", "suppliers", "order_details"]
+
+region:
+  unique_key: ["region_id"]
+  grain: "One row per geographical region"
+  safe_to_join_with: ["territories"]
+
+shippers:
+  unique_key: ["shipper_id"]
+  grain: "One row per shipping company"
+  safe_to_join_with: ["orders"]
+
+suppliers:
+  unique_key: ["supplier_id"]
+  grain: "One row per supplier company"
+  safe_to_join_with: ["products"]
+
+territories:
+  unique_key: ["territory_id"]
+  grain: "One row per sales territory"
+  safe_to_join_with: ["region", "employee_territories"]
+
+us_states:
+  unique_key: ["state_id"]
+  grain: "One row per US state"
+  safe_to_join_with: []

@@ -1,0 +1,36 @@
+image: python:3.12
+
+definitions:
+  caches:
+    uv: ~/.cargo/bin/uv
+    uv-cache: ~/.cache/uv
+
+pipelines:
+   pull-requests:
+    feature/TSPR-*:
+      - parallel: &build-test-lint-scan
+        - step:
+            name: 'Build and Test'
+            caches:
+              - uv
+              - uv-cache
+            script:
+              - curl -LsSf https://astral.sh/uv/install.sh | sh
+              - source $HOME/.cargo/env
+              - uv sync --all-extras --dev
+              - uv run pytest tests/
+        - step:
+            name: 'Lint'
+            caches:
+              - uv
+              - uv-cache
+            script:
+              - curl -LsSf https://astral.sh/uv/install.sh | sh
+              - source $HOME/.cargo/env
+              - uv sync --all-extras --dev
+              - uv run ruff check . --ignore E501
+              - uv run ruff format --check .
+        - step:
+            name: 'Security scan'
+            script:
+              - echo "Your security scan goes here..."
