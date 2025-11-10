@@ -70,6 +70,7 @@ _________________________________________________________________
 instantinsight uses 11 specialized agents that collaborate in stages:
 
 **Query Processing**
+
 1. `QueryIntentValidator` - Validates intent and security
 2. `QueryNormalizer` - Normalizes to canonical form
 3. `ClarificationAgent` - Generates help messages
@@ -95,6 +96,7 @@ See [Agent Workflow Documentation](docs/agent-workflow.md) for detailed interact
 ### Installation
 
 **Prerequisites**: Ensure these services are running locally:
+
 - PostgreSQL with pgvector extension (port 5432)
 - Redis (port 6379)
 - Langfuse (port 3000)
@@ -164,11 +166,11 @@ Visualization: bar chart (confidence: 85%)
 
 ### Typical Query Costs
 
-| Query Type | Without Cache | With Cache (70% hit) |
-|------------|---------------|----------------------|
-| Simple | $0.05 | $0.015 |
-| Complex | $0.15 | $0.045 |
-| Multi-join | $0.30 | $0.090 |
+| Query Type | Without Cache  | With Cache (70% hit) |
+| ---------- | -------------- | -------------------- |
+| Simple     | $0.05 | $0.015 |                      |
+| Complex    | $0.15 | $0.045 |                      |
+| Multi-join | $0.30 | $0.090 |                      |
 
 ## Configuration
 
@@ -235,17 +237,20 @@ AGENT_CONFIGS = {
 ## Technology Stack
 
 ### Core
+
 - **Python 3.12+** with uv
 - **PostgreSQL** with pgvector extension (for RAG database)
 - **Ibis Framework** - Universal database connectivity (Athena, PostgreSQL, Snowflake, BigQuery, etc.)
 - **AWS Bedrock** (Claude Sonnet, Claude Haiku, Nova Pro/Micro)
 
 ### AI/ML
+
 - **LangChain** - LLM orchestration
 - **Strands** - Agent framework
 - **Instructor** - Structured outputs
 
 ### Monitoring
+
 - **Langfuse** - Observability and tracing
 - **Loguru** - Structured logging
 
@@ -296,6 +301,7 @@ See [Architecture Documentation](docs/architecture.md) for detailed extension po
 ### Langfuse Integration
 
 All queries are traced in Langfuse:
+
 - Agent invocations
 - Token usage per agent
 - Costs per query
@@ -309,6 +315,7 @@ processor = NL2SQLProcessor(debug_mode=True)
 ```
 
 Logs:
+
 - Agent inputs/outputs
 - Pipeline stage transitions
 - Cache lookups
@@ -339,11 +346,3 @@ Logs:
 "Show sample data from orders table"
 "List all columns in the products table"
 ```
-
-## Contributing
-
-Contributions welcome! Please:
-1. Follow code style guidelines
-2. Add tests for new features
-3. Update documentation
-4. Keep functions under 20 lines
